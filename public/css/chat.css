@@ -1,0 +1,109 @@
+#message {
+    width: 250px;
+}
+
+#panel {
+    height: 300px;
+    max-height: 300px;
+    overflow: auto;
+}
+
+#emoji, #sound {
+    margin-left: 10px;
+}
+
+#icon {
+    font-size: 20px;
+}
+
+table {
+    table-layout: fixed;
+}
+
+.pm, .mention {
+    font-style: bold;
+    color: #eb9d00;
+}
+
+.emote {
+    font-style: italic;
+}
+
+.alert, .kick, .op, .deop {
+    font-style: bold;
+    color: #f55549;
+}
+
+.info {
+    font-style: bold;
+    color: #55aef6;
+}
+
+.light {
+    color: #616161;
+}
+
+.slack {
+    color: #eb9d00;
+}
+
+.message {
+    color: #2b2b2b;
+}
+
+.content {
+    table-layout: fixed;
+    width: 100%;
+    white-space: nowrap;
+} 
+
+.user {
+  width: 10%;
+}
+
+.message {
+  width: 85%;
+}
+
+.time {
+  width: 5%;
+}
+
+.content td {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.content td,
+.content th {
+  text-align: left;
+  padding: 5px 10px;
+}
+
+.spin {
+    -webkit-animation: spin 1500ms infinite linear;
+    animation: spin 1500ms infinite linear;
+}
+
+@-webkit-keyframes spin {
+    0% {
+        -webkit-transform: rotate(0deg);
+        transform: rotate(0deg);
+    }
+    100% {
+        -webkit-transform: rotate(359deg);
+        transform: rotate(359deg);
+    }
+}
+
+@keyframes spin {
+    0% {
+        -webkit-transform: rotate(0deg);
+        transform: rotate(0deg);
+    }
+    100% {
+        -webkit-transform: rotate(359deg);
+        transform: rotate(359deg);
+    }
+}
