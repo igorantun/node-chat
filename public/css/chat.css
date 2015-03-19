@@ -4,8 +4,8 @@
 
 #panel {
     height: 300px;
-    max-height: 300px;
     overflow: auto;
+    max-height: 300px;
 }
 
 #emoji, #sound {
@@ -20,9 +20,26 @@ table {
     table-layout: fixed;
 }
 
+.name {
+    float: left;
+}
+
+.msg {
+    word-wrap: break-word;
+    padding-right: 20px;
+    padding-left: 20px;
+    display: flex;
+}
+
+.timestamp {
+    float: right;
+    font-size: 8pt;
+    font-weight: bold;
+}
+
 .pm, .mention {
-    font-style: bold;
     color: #eb9d00;
+    font-weight: bold;
 }
 
 .emote {
@@ -30,13 +47,13 @@ table {
 }
 
 .alert, .kick, .op, .deop {
-    font-style: bold;
     color: #f55549;
+    font-style: bold;
 }
 
 .info {
-    font-style: bold;
     color: #55aef6;
+    font-style: bold;
 }
 
 .light {
@@ -45,36 +62,7 @@ table {
 
 .message {
     color: #2b2b2b;
-}
-
-.content {
-    table-layout: fixed;
-    width: 100%;
-    white-space: nowrap;
-} 
-
-.user {
-  width: 10%;
-}
-
-.message {
-  width: 85%;
-}
-
-.time {
-  width: 5%;
-}
-
-.content td {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.content td,
-.content th {
-  text-align: left;
-  padding: 5px 10px;
+    margin-top: 5px;
 }
 
 .spin {

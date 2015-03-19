@@ -5,7 +5,7 @@ var timer,
     clients = [],
     nmr = 0,
     dev = false,
-    version = 'BETA 0.9.3',
+    version = 'BETA 0.10.4',
     connected = false,
     blop = new Audio("sounds/blop.wav");
 
@@ -46,7 +46,7 @@ var connect = function() {
             switch(data.info) {
                 case 'rejected':
                     var message;
-                    if(data.reason == 'short') message = 'Your username must have at least 3 characters';
+                    if(data.reason == 'length') message = 'Your username must have at least 3 characters and no more than 16 characters';
                     if(data.reason == 'space') message = 'Your username should not have spaces';
                     if(data.reason == 'taken') message = 'This username is already taken';
                     showChat('light', null, message, getTime());
@@ -130,10 +130,13 @@ function updateBar(icon, placeholder, disable) {
 function showChat(type, user, message, time, subtxt) {
     if(type == 'alert' || type == 'kick' || type == 'info' || type == 'light' || type == 'help' || type == 'op' || type == 'deop')
         user = 'System';
+    if(type == 'me' || type == 'em')
+        type = 'emote';
+
     if(!subtxt)
-        $('#chat').append('<tr class="' + type + '""><td><b>' + user + '</b></td><td class="msg">' + message + '</td><td class="pull-right"><b><small>' + time + '</small></b></td></tr>');
+        $('#panel').append('<div class="' + type + '""><span class="name"><b>' + user + '</b></span><span class="timestamp">' + time + '</span><span class="msg">' + message + '</span></div>');
     else
-        $('#chat').append('<tr class="' + type + '""><td><b>' + user + '</b></td><td class="msg">' + message + '</td><td class="pull-right"><b><small>(' + subtxt + ') ' + time + '</small></b></td></tr>');
+        $('#panel').append('<div class="' + type + '""><span class="name"><b>' + user + '</b></span><span class="timestamp">(' + subtxt + ') ' + time + '</span><span class="msg">' + message + '</span></div>');
     
     $('#panel').animate({scrollTop: $('#panel').prop("scrollHeight")}, 500);
     updateStyle();
@@ -180,7 +183,7 @@ function handleInput() {
 
                 case 'clear':
                     nmr = 0;
-                    document.getElementById('chat').innerHTML = '';
+                    document.getElementById('panel').innerHTML = '';
                     showChat('light', 'System', 'Messages cleared', getTime());
                     break;
 
@@ -232,19 +235,7 @@ function updateStyle() {
 
 
 // Triggers
-$(document).ready(function(){
-    $('#message').focus();
-
-    $("#message").keypress(function(e){
-        if(e.which == 13) {
-            handleInput();
-        }
-    });
-
-    $('#send').bind("click", function() {
-        handleInput();
-    });
-
+$(document).ready(function() {
     $('#user').bind("click", function() {
         var content = '',
             admin;
@@ -260,11 +251,21 @@ $(document).ready(function(){
         $('#users-dialog').modal('show');
     });
 
+    $('#send').bind("click", function() {
+        handleInput();
+    });
+
     $('#admin').bind("click", function() {
         $('#admin-help-dialog').modal('show');
     });
 
     $('#help').bind("click", function() {
         $('#help-dialog').modal('show');
+    });
+
+    $("#message").keypress(function(e) {
+        if(e.which == 13) {
+            handleInput();
+        }
     });
 });

@@ -116,7 +116,7 @@ chat.installHandlers(server, {prefix:'/socket',log:function(){}});
 
 // Util
 function updateUser(id, name) {
-    if(name.length > 2 && name.indexOf(' ') < 0 && !checkUser(name)) {
+    if(name.length > 2 &&  name.length < 17 && name.indexOf(' ') < 0 && !checkUser(name)) {
         if(clients[id].un == null) {
             clients[id].con.write(JSON.stringify({type:'server', info:'success'}));
             uid++;
@@ -138,7 +138,7 @@ function updateUser(id, name) {
         var motive, check = false;
 
         if(name.indexOf(' ') > -1) motive = 'space';
-        if(name.length < 3) motive = 'short';
+        if(name.length < 3 || name.length > 16) motive = 'length';
         if(checkUser(name)) motive = 'taken';
         if(clients[id].un != null) check = true;
 
