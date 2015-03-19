@@ -4,14 +4,17 @@ var favicon = require('serve-favicon'),
     express = require('express'),
     colors = require('colors'),
     sockjs = require('sockjs'),
+    https = require('https'),
     path = require('path'),
+    fs = require('fs'),
     app = express();
 
 var config = {
     log: true,
     readline: true,
     ipadr: '127.0.0.1' || 'localhost',
-    port: 3000
+    port: 3000,
+    ssl: false
 };
 
 var styles = {
@@ -24,12 +27,22 @@ var styles = {
     error:   colors.bold.red.dim
 }
 
+if(config.ssl) {
+    var options = {
+        key: fs.readFileSync('/path/to/your/ssl.key'),
+        cert: fs.readFileSync('/path/to/your/ssl.crt')
+    },
+    
+    server = https.createServer(options);
+}
+
 var chat = sockjs.createServer(),
     clients = [],
     users = {},
     uid = 1;
 
 var escapeHtml = function(e,t,n,r){var i=0,s=0,o=false;if(typeof t==="undefined"||t===null){t=2}e=e.toString();if(r!==false){e=e.replace(/&/g,"&")}e=e.replace(/</g,"&lt;").replace(/>/g,"&gt;");var u={ENT_NOQUOTES:0,ENT_HTML_QUOTE_SINGLE:1,ENT_HTML_QUOTE_DOUBLE:2,ENT_COMPAT:2,ENT_QUOTES:3,ENT_IGNORE:4};if(t===0){o=true}if(typeof t!=="number"){t=[].concat(t);for(s=0;s<t.length;s++){if(u[t[s]]===0){o=true}else if(u[t[s]]){i=i|u[t[s]]}}t=i}if(t&u.ENT_HTML_QUOTE_SINGLE){e=e.replace(/'/g,"&#039;")}if(!o){e=e.replace(/"/g,"&#34;")}return e};
+
 
 // Config
 if(config.readline) {
@@ -63,7 +76,7 @@ chat.on('connection', function(conn) {
     clients[conn.id] = {
         id: uid,
         un: null,
-        ip: conn.remoteAddress,
+        ip: conn.headers['x-forwarded-for'],
         op: false,
         con: conn
     };
@@ -74,7 +87,7 @@ chat.on('connection', function(conn) {
         un: null,
         op: false
     };
-
+    
     conn.write(JSON.stringify({type:'server', info:'clients', clients:users}));
     conn.on('data', function(message) {
         try {

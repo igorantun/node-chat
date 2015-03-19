@@ -5,7 +5,7 @@ var timer,
     clients = [],
     nmr = 0,
     dev = false,
-    version = 'BETA 0.1.0',
+    version = 'BETA 0.9.3',
     connected = false,
     blop = new Audio("sounds/blop.wav");
 
@@ -14,12 +14,12 @@ emojione.imageType = 'png';
 emojione.unicodeAlt = false;
 document.getElementById('version').innerHTML = version;
 
-var regex = /(&zwj;|&nbsp;)/g,
-    escapeHtml = function(e,t,n,r){var i=0,s=0,o=false;if(typeof t==="undefined"||t===null){t=2}e=e.toString();if(r!==false){e=e.replace(/&/g,"&")}e=e.replace(/</g,"&lt;").replace(/>/g,"&gt;");var u={ENT_NOQUOTES:0,ENT_HTML_QUOTE_SINGLE:1,ENT_HTML_QUOTE_DOUBLE:2,ENT_COMPAT:2,ENT_QUOTES:3,ENT_IGNORE:4};if(t===0){o=true}if(typeof t!=="number"){t=[].concat(t);for(s=0;s<t.length;s++){if(u[t[s]]===0){o=true}else if(u[t[s]]){i=i|u[t[s]]}}t=i}if(t&u.ENT_HTML_QUOTE_SINGLE){e=e.replace(/'/g,"&#039;")}if(!o){e=e.replace(/"/g,"&#34;")}return e};
+var regex = /(&zwj;|&nbsp;)/g;
+
 
 // Connection
 var connect = function() {
-    socket = new SockJS(dev ? 'http://localhost:3000/socket' : 'http://igorantun.com/socket');
+    socket = new WebSocket('ws://localhost:3000/socket/websocket');
 
     socket.onopen = function() {
         console.info('Connection established.');
@@ -105,7 +105,7 @@ var connect = function() {
 function sendSocket(value, method, other, txt) {
     socket.send(JSON.stringify({
         type: method,
-        message: escapeHtml(value),
+        message: value,
         subtxt: txt,
         extra: other
     }));
@@ -141,7 +141,7 @@ function showChat(type, user, message, time, subtxt) {
 }
 
 function handleInput() {
-    var value = escapeHtml($('#message').val().replace(regex, ' ')).trim();
+    var value = $('#message').val().replace(regex, ' ').trim();
 
     if(value.length > 0) {
         if(username === undefined) {
@@ -245,7 +245,7 @@ $(document).ready(function(){
         handleInput();
     });
 
-    $('#users').bind("click", function() {
+    $('#user').bind("click", function() {
         var content = '',
             admin;
 
@@ -262,5 +262,9 @@ $(document).ready(function(){
 
     $('#admin').bind("click", function() {
         $('#admin-help-dialog').modal('show');
+    });
+
+    $('#help').bind("click", function() {
+        $('#help-dialog').modal('show');
     });
 });
