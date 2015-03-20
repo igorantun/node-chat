@@ -5,7 +5,7 @@ var timer,
     clients = [],
     nmr = 0,
     dev = false,
-    version = 'BETA 0.11.4',
+    version = 'BETA 0.11.5',
     connected = false,
     blop = new Audio("sounds/blop.wav");
 
@@ -16,6 +16,9 @@ document.getElementById('version').innerHTML = version;
 
 var regex = /(&zwj;|&nbsp;)/g;
 
+var ping = setInterval(function(){
+    socket.send(JSON.stringify({data: 'ping'}));
+}, 60 * 1000);
 
 // Connection
 var connect = function() {
