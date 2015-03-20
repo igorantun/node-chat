@@ -11,7 +11,7 @@ You can test the live demo at http://igorantun.com/chat
 - Private messaging
 - User @mentioning
 - Admin commands (/kick, /alert)
-- Other awesome features
+- [Other awesome features yet to be implemented](https://github.com/IgorAntun/node-chat/blob/master/TODO.md)
 
 ## Setup
 Clone this repo to your desktop and run `npm install` to install all the dependencies.
