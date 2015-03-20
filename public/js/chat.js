@@ -5,7 +5,7 @@ var timer,
     clients = [],
     nmr = 0,
     dev = false,
-    version = 'BETA 0.10.4',
+    version = 'BETA 0.11.4',
     connected = false,
     blop = new Audio("sounds/blop.wav");
 
@@ -85,12 +85,11 @@ var connect = function() {
                     document.getElementById('users').innerHTML = Object.keys(clients).length + ' USERS';
                     break;
             }
+        } else if(data.type == 'kick') {
+            location.reload()
         } else {
-            if(data.message.indexOf('@' + username) > -1) {
+            if(data.message.indexOf('@' + username) > -1)
                 data.type = 'mention';
-                if(document.getElementById('sound').checked)
-                    blop.play();
-            } 
 
             showChat(data.type, data.user, data.message, data.time, data.subtxt);
         }
@@ -98,6 +97,11 @@ var connect = function() {
         if((data.type == 'op' || data.type == 'deop') && data.extra == username)  {
             if(data.type == 'op') $('#admin').show();
             if(data.type == 'deop') $('#admin').hide();
+        }
+
+        if(data.type == 'global' || data.type == 'pm' || data.type == 'mention') {
+            if(document.getElementById('sound').checked)
+                blop.play();
         }
     }
 };
@@ -128,7 +132,7 @@ function updateBar(icon, placeholder, disable) {
 }
 
 function showChat(type, user, message, time, subtxt) {
-    if(type == 'alert' || type == 'kick' || type == 'info' || type == 'light' || type == 'help' || type == 'op' || type == 'deop')
+    if(type == 'global' || type == 'kick' || type == 'info' || type == 'light' || type == 'help' || type == 'op' || type == 'deop')
         user = 'System';
     if(type == 'me' || type == 'em')
         type = 'emote';
@@ -159,7 +163,7 @@ function handleInput() {
                         if(command[0] == 'pm' && value.substring(command[0].concat(command[1]).length).length > 2)
                             sendSocket(value.substring(command[0].concat(command[1]).length + 2), 'pm', command[1], 'PM');
                         if(command[0] == 'alert')
-                            sendSocket(value.substring(command[0].length + 2), 'alert', null, username);
+                            sendSocket(value.substring(command[0].length + 2), 'global', null, username);
                         if(command[0] == 'op' || command[0] == 'deop' || command[0] == 'kick' || command[0] == 'me' || command[0] == 'em')
                             sendSocket(value.substring(command[0].length + 2), command[0]);
                         if(command[0] == 'name') {
@@ -168,7 +172,7 @@ function handleInput() {
                         }
                     } else {
                         var variables;
-                        if(command[0] == 'alert' || command[0] == 'me' || command[0] == 'em')
+                        if(command[0] == 'global' || command[0] == 'me' || command[0] == 'em')
                             variables = ' [message]';
                         if(command[0] == 'kick' || command[0] == 'op' || command[0] == 'deop')
                             variables = ' [user]';
@@ -225,7 +229,7 @@ function getTime() {
 }
 
 function updateStyle() {
-    $('.msg').linkify();
+    $('#panel').linkify();
     if(document.getElementById('emoji').checked) {
         var input = document.getElementsByClassName('msg')[nmr].innerHTML;
         var output = emojione.shortnameToImage(document.getElementsByClassName('msg')[nmr].innerHTML);

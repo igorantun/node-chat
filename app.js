@@ -43,6 +43,9 @@ var chat = sockjs.createServer(),
 
 var escapeHtml = function(e,t,n,r){var i=0,s=0,o=false;if(typeof t==="undefined"||t===null){t=2}e=e.toString();if(r!==false){e=e.replace(/&/g,"&")}e=e.replace(/</g,"&lt;").replace(/>/g,"&gt;");var u={ENT_NOQUOTES:0,ENT_HTML_QUOTE_SINGLE:1,ENT_HTML_QUOTE_DOUBLE:2,ENT_COMPAT:2,ENT_QUOTES:3,ENT_IGNORE:4};if(t===0){o=true}if(typeof t!=="number"){t=[].concat(t);for(s=0;s<t.length;s++){if(u[t[s]]===0){o=true}else if(u[t[s]]){i=i|u[t[s]]}}t=i}if(t&u.ENT_HTML_QUOTE_SINGLE){e=e.replace(/'/g,"&#039;")}if(!o){e=e.replace(/"/g,"&#34;")}return e};
 
+var ping = setInterval(function(){
+    sendToAll({type: 'server', info: 'ping'});
+}, 60 * 1000);
 
 // Config
 if(config.readline) {
@@ -156,7 +159,7 @@ function sendToOne(data, user, type) {
     for(var client in clients) {
         if(clients[client].un == user) {
             if(type == 'message') clients[client].con.write(JSON.stringify(data));
-            if(type == 'kick') clients[client].con.close();
+            if(type == 'kick') clients[client].con.write(JSON.stringify(data));
             if(type == 'deop') clients[client].op = false;
             if(type == 'op') clients[client].op = true;
         }
@@ -198,8 +201,8 @@ function sendSocket(user, message) {
             }
             break;
 
-        case 'alert': case 'kick': case 'op': case 'deop':
-            if(data.type == 'alert' && user.op)
+        case 'global': case 'kick': case 'op': case 'deop':
+            if(data.type == 'global' && user.op)
                 return sendToAll(data);
 
             if(!user.op || data.message == data.user) {
@@ -214,7 +217,7 @@ function sendSocket(user, message) {
                     if(data.type == 'op')   data.message = data.user + ' gave ' + data.message + ' administrator permissions';
                     sendToAll(data);
 
-                    if(data.type != 'alert')
+                    if(data.type != 'global')
                         sendToOne(data, JSON.parse(message).message, data.type);
                 } else {
                     data.type = 'light';
@@ -261,50 +264,35 @@ function consoleLog(type, message) {
 if(config.readline) readLine();
 function readLine() {
     rl.on('line', function(line) {
-        var user,
+        var type = line.substring(1).split(' ')[0].toLowerCase(),
+            action,
+            user,
             data = {
-            user: 'Console',
-            time: getTime()
-        };
+                user: 'Console',
+                time: getTime()
+            };
 
         if(line.charAt(0) == '/') {
-            switch(line.substring(1).split(' ')[0].toLowerCase()) {
+            switch(type) {
                 case 'op':
-                    var string = 'Console gave ' + line.substring(4) + ' administrator permissions';
+                    action = 'gave '
                     user = line.substring(4);
-                    data.message = string;
-                    data.type = 'op';
                     break;
                     
                 case 'deop':
-                    var string = 'Console removed ' + line.substring(6) + ' administrator permissions';
+                    action = 'removed '
                     user = line.substring(6);
-                    data.message = string;
-                    data.type = 'deop';
-                    break;
-
-                case 'say':
-                    data.message = escapeHtml(line.substring(5));
-                    data.subtxt = 'Console';
-                    data.type = 'op';
-                    break;
-
-                case 'kick':
-                    var string = 'Console kicked ' + line.substring(6) + ' from the server';
-                    user = line.substring(6);
-                    data.message = string;
-                    data.type = 'kick';
                     break;
             }
 
+            var string = 'Console ' + action + user + ' administrator permissions';
+
+            data.message = string;
+            data.type = type;
             data.extra = user;
+
             sendToAll(data);
-            if(line.substring(1).split(' ')[0].toLowerCase() != 'say')
-                sendToOne(data, user, data.type);
-        } else {
-            data.type = 'message';
-            data.message = line;
-            sendToAll(data);
+            sendToOne(data, user, data.type);
         }
 
         rl.prompt();
