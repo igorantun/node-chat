@@ -41,7 +41,8 @@ var chat = sockjs.createServer(),
     users = {},
     uid = 1;
 
-var escapeHtml = function(e,t,n,r){var i=0,s=0,o=false;if(typeof t==="undefined"||t===null){t=2}e=e.toString();if(r!==false){e=e.replace(/&/g,"&")}e=e.replace(/</g,"&lt;").replace(/>/g,"&gt;");var u={ENT_NOQUOTES:0,ENT_HTML_QUOTE_SINGLE:1,ENT_HTML_QUOTE_DOUBLE:2,ENT_COMPAT:2,ENT_QUOTES:3,ENT_IGNORE:4};if(t===0){o=true}if(typeof t!=="number"){t=[].concat(t);for(s=0;s<t.length;s++){if(u[t[s]]===0){o=true}else if(u[t[s]]){i=i|u[t[s]]}}t=i}if(t&u.ENT_HTML_QUOTE_SINGLE){e=e.replace(/'/g,"&#039;")}if(!o){e=e.replace(/"/g,"&#34;")}return e};
+var alphanumeric = /^\w+$/,
+    escapeHtml = function(e,t,n,r){var i=0,s=0,o=false;if(typeof t==="undefined"||t===null){t=2}e=e.toString();if(r!==false){e=e.replace(/&/g,"&")}e=e.replace(/</g,"&lt;").replace(/>/g,"&gt;");var u={ENT_NOQUOTES:0,ENT_HTML_QUOTE_SINGLE:1,ENT_HTML_QUOTE_DOUBLE:2,ENT_COMPAT:2,ENT_QUOTES:3,ENT_IGNORE:4};if(t===0){o=true}if(typeof t!=="number"){t=[].concat(t);for(s=0;s<t.length;s++){if(u[t[s]]===0){o=true}else if(u[t[s]]){i=i|u[t[s]]}}t=i}if(t&u.ENT_HTML_QUOTE_SINGLE){e=e.replace(/'/g,"&#039;")}if(!o){e=e.replace(/"/g,"&#34;")}return e};
 
 
 // Config
@@ -116,7 +117,7 @@ chat.installHandlers(server, {prefix:'/socket',log:function(){}});
 
 // Util
 function updateUser(id, name) {
-    if(name.length > 2 &&  name.length < 17 && name.indexOf(' ') < 0 && !checkUser(name)) {
+    if(name.length > 2 &&  name.length < 17 && name.indexOf(' ') < 0 && !checkUser(name) && name.match(alphanumeric)) {
         if(clients[id].un == null) {
             clients[id].con.write(JSON.stringify({type:'server', info:'success'}));
             uid++;
@@ -137,6 +138,7 @@ function updateUser(id, name) {
     } else  {
         var motive, check = false;
 
+        if(!name.match(alphanumeric)) motive = 'format';
         if(name.indexOf(' ') > -1) motive = 'space';
         if(name.length < 3 || name.length > 16) motive = 'length';
         if(checkUser(name)) motive = 'taken';

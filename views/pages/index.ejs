@@ -71,13 +71,16 @@
                                 </div>
 
                                 <hr>
-                                <div class="form-inline" align="center">
-                                    <div class="input-group form-group">
-                                        <span class="input-group-addon"><span id="icon" class="mdi mdi-action-account-circle"></span></span>
-                                        <input id="message" class="form-control" autocomplete="false" type="text" placeholder="Choose an username">
-                                        <span class="material-input"></span>
+                                <div class="row">
+                                    <div class="col-lg-8 col-lg-offset-2">
+                                        <div class="input-group">
+                                            <span class="input-group-addon"><span id="icon" class="mdi mdi-action-account-circle"></span></span>
+                                            <input id="message" type="text" class="form-control" placeholder="Choose an username" autocomplete="false" aria-describedby="basic-addon1">
+                                            <span class="input-group-btn">
+                                                <button id="send" class="btn btn-primary btn-flat">Connect</button>
+                                            </span>
+                                        </div>
                                     </div>
-                                    <button id="send" class="btn btn-primary btn-flat">Connect</button>
                                 </div>
                             </div>
                         </div>
@@ -85,7 +88,7 @@
                     <hr>
                     <div class="row">
                         <div class="col-xs-12">
-                            <p class="text-left pull-left">Created by Igor Antun</p>
+                            <p class="text-left pull-left">Created by <a href="https://github.com/IgorAntun" target="_blank">Igor Antun</a></p>
                             <p id="badges" class="text-right pull-right">
                                 <span><label id="users" class="label">0 USERS</label></span>
                                 <span><label id="admin" class="label label-warning" style="display:none">ADMIN</label></span>

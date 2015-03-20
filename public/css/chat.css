@@ -35,7 +35,7 @@
     font-weight: bold;
 }
 
-.emote {
+.emote span:nth-child(3){
     font-style: italic;
 }
 

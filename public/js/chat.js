@@ -1,11 +1,12 @@
 // Variables
 var timer,
     socket,
+    oldname,
     username,
     clients = [],
     nmr = 0,
     dev = false,
-    version = 'BETA 0.11.5',
+    version = 'BETA 0.12.3',
     connected = false,
     blop = new Audio("sounds/blop.wav");
 
@@ -22,7 +23,7 @@ var ping = setInterval(function(){
 
 // Connection
 var connect = function() {
-    socket = new WebSocket('ws://localhost:3000/socket/websocket');
+    socket = new WebSocket('wss://igorantun.com/socket/websocket');
 
     socket.onopen = function() {
         console.info('Connection established.');
@@ -50,13 +51,15 @@ var connect = function() {
                 case 'rejected':
                     var message;
                     if(data.reason == 'length') message = 'Your username must have at least 3 characters and no more than 16 characters';
-                    if(data.reason == 'space') message = 'Your username should not have spaces';
+                    if(data.reason == 'format') message = 'Your username must only contain alphanumeric characters (numbers, letters and underscores)';
                     if(data.reason == 'taken') message = 'This username is already taken';
                     showChat('light', null, message, getTime());
 
                     if(!data.keep) {
                         username = undefined;
                         connected = false;
+                    } else {
+                        username = oldname;
                     }
                     break;
 
@@ -170,6 +173,7 @@ function handleInput() {
                         if(command[0] == 'op' || command[0] == 'deop' || command[0] == 'kick' || command[0] == 'me' || command[0] == 'em')
                             sendSocket(value.substring(command[0].length + 2), command[0]);
                         if(command[0] == 'name') {
+                            oldname = username;
                             username = value.substring(command[0].length + 2);
                             updateInfo();
                         }
