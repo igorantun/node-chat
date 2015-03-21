@@ -4,9 +4,7 @@ This is a list of planned features/fixes for the [node-chat project](https://git
 (listed by priority)
 
 ## Features
-- Rate limiting messages
 - 'Someone is writing...' feature
-- Ban command for administrators
 - Ability to create/join other chat rooms (option to set password)
 
 ## Bug Fixes

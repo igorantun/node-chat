@@ -43,14 +43,13 @@ a, a:hover {
 
 .pm , .mention {
     color: #eb9d00;
-    font-weight: bold;
 }
 
 .emote span:nth-child(4){
     font-style: italic;
 }
 
-.global, .kick, .op , .deop {
+.global, .kick, .op , .deop, .ban{
     color: #f55549;
 }
 

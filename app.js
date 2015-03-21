@@ -38,6 +38,7 @@ if(config.ssl) {
 var chat = sockjs.createServer(),
     clients = [],
     users = {},
+    bans = [],
     uid = 1;
 
 var alphanumeric = /^\w+$/,
@@ -70,8 +71,16 @@ var server = app.listen(config.port, config.ipadr, function() {
     consoleLog('start', 'Listening at http://' + host + ':' + port);
 });
 
+var lastTime = [];
+var currentTime = [];
+var rateLimit = [];
+var rateInterval = [];
+
 chat.on('connection', function(conn) {
     consoleLog('socket', colors.underline(conn.id) +': connected');
+    rateLimit[conn.id] = 1;
+    lastTime[conn.id] = Date.now();
+    currentTime[conn.id] = Date.now();
 
     clients[conn.id] = {
         id: uid,
@@ -88,21 +97,38 @@ chat.on('connection', function(conn) {
         op: false
     };
     
+    if(bans.indexOf(clients[conn.id].ip) > -1) {
+        conn.write(JSON.stringify({type:'server', info:'rejected', reason:'banned'}));
+        conn.close();
+    }
+
     conn.write(JSON.stringify({type:'server', info:'clients', clients:users}));
     conn.write(JSON.stringify({type:'server', info:'user', client:users[uid]}));
     conn.on('data', function(message) {
-        try {
-            var data = JSON.parse(message);
+        currentTime[conn.id] = Date.now();
+        rateInterval[conn.id] = (currentTime[conn.id] - lastTime[conn.id]) / 1000;
+        lastTime[conn.id] = currentTime[conn.id];
+        rateLimit[conn.id] += rateInterval[conn.id];
 
-            if(data.type == 'ping') return false;
-            if(data.type == 'delete') deleteChat(data.message, conn.id);
-            if(data.type == 'update') return updateUser(conn.id, data.user);
-            if(data.type == 'pm') consoleLog('message', '[PM] ' + colors.underline(clients[conn.id].un) + ' to ' + colors.underline(data.extra) + ': ' + data.message);
-            else consoleLog('message', '[' + data.type.charAt(0).toUpperCase() + data.type.substring(1) + '] ' + colors.underline(clients[conn.id].un) + ': ' + data.message);
+        if(rateLimit[conn.id] > 1)
+            rateLimit[conn.id] = 1;
+        if(rateLimit[conn.id] < 1 && JSON.parse(message).type != 'delete')
+            return conn.write(JSON.stringify({type:'server', info:'spam'}));
+        else {
+            try {
+                var data = JSON.parse(message);
 
-            if(data.type != 'update') sendSocket(clients[conn.id], message);
-        } catch(err) {
-            return consoleLog('error', err);
+                if(data.type == 'ping') return false;
+                if(data.type == 'delete') deleteChat(data.message, conn.id);
+                if(data.type == 'update') return updateUser(conn.id, data.user);
+                if(data.type == 'pm') consoleLog('message', '[PM] ' + colors.underline(clients[conn.id].un) + ' to ' + colors.underline(data.extra) + ': ' + data.message);
+                else consoleLog('message', '[' + data.type.charAt(0).toUpperCase() + data.type.substring(1) + '] ' + colors.underline(clients[conn.id].un) + ': ' + data.message);
+
+                if(data.type != 'update') handleSocket(clients[conn.id], message);
+            } catch(err) {
+                return consoleLog('error', err);
+            }
+            rateLimit[conn.id] -= 1;
         }
     });
 
@@ -124,7 +150,7 @@ function deleteChat(chat, user) {
 }
 
 function updateUser(id, name) {
-    if(name.length > 2 &&  name.length < 17 && name.indexOf(' ') < 0 && !checkUser(name) && name.match(alphanumeric)) {
+    if(name.length > 2 && name.length < 17 && name.indexOf(' ') < 0 && !checkUser(name) && name.match(alphanumeric) && name != 'Console' && name != 'System') {
         if(clients[id].un == null) {
             clients[id].con.write(JSON.stringify({type:'server', info:'success'}));
             uid++;
@@ -142,13 +168,13 @@ function updateUser(id, name) {
             }
         });
         clients[id].un = name;
-    } else  {
-        var motive, check = false;
+    } else {
+        var motive = 'format',
+            check = false;
 
         if(!name.match(alphanumeric)) motive = 'format';
-        if(name.indexOf(' ') > -1) motive = 'space';
         if(name.length < 3 || name.length > 16) motive = 'length';
-        if(checkUser(name)) motive = 'taken';
+        if(checkUser(name) ||  name != 'Console' || name != 'System') motive = 'taken';
         if(clients[id].un != null) check = true;
 
         clients[id].con.write(JSON.stringify({type:'server', info:'rejected', reason:motive, keep:check}));
@@ -165,7 +191,6 @@ function sendToOne(data, user, type) {
     for(var client in clients) {
         if(clients[client].un == user) {
             if(type == 'message') clients[client].con.write(JSON.stringify(data));
-            if(type == 'kick') clients[client].con.write(JSON.stringify(data));
             if(type == 'deop') clients[client].op = false;
             if(type == 'op') clients[client].op = true;
         }
@@ -184,7 +209,7 @@ function checkUser(user) {
     return false;
 }
 
-function sendSocket(user, message) {
+function handleSocket(user, message) {
     var data = JSON.parse(message);
 
     data.id = user.id;
@@ -208,23 +233,45 @@ function sendSocket(user, message) {
             }
             break;
 
-        case 'global': case 'kick': case 'op': case 'deop':
+        case 'global': case 'kick': case 'ban': case 'op': case 'deop':
             if(data.type == 'global' && user.op)
                 return sendToAll(data);
 
             if(!user.op || data.message == data.user) {
                 data.subtxt = null;
-                data.message = data.message == data.user ? 'You can\'t do that to yourself' : 'You are not an administrator';
+                data.message = !user.op ? 'You are not an administrator' : 'You can\'t do that to yourself';
                 sendBack(data, user);
             } else {
                 if(checkUser(data.message)) {
+                    if(data.type == 'ban') {
+                        var time = parseInt(data.extra)
+                        if(!isNaN(time)) {
+                            for(var client in clients) {
+                                if(clients[client].un == data.message)
+                                    bans.push(clients[client].ip);
+                            }
+                            data.extra = data.message;
+                            data.message = data.user + ' banned ' + data.message + ' from the server for ' + time + ' minutes';
+
+                            setTimeout(function() {
+                                bans.splice(bans.indexOf(clients[user.con.id].ip))
+                            }, time * 1000 * 60);
+
+                            return sendToAll(data);
+                        } else {
+                            data.type = 'light';
+                            data.message = 'Use /ban [user] [minutes]';
+                            return sendToOne(data, data.user, 'message')
+                        }
+                    }
+
                     data.extra = data.message;
                     if(data.type == 'kick') data.message = data.user + ' kicked ' + data.message + ' from the server';
                     if(data.type == 'deop') data.message = data.user + ' removed ' + data.message + ' administrator permissions';
                     if(data.type == 'op')   data.message = data.user + ' gave ' + data.message + ' administrator permissions';
                     sendToAll(data);
 
-                    if(data.type != 'global')
+                    if(data.type == 'op' || data.type == 'deop')
                         sendToOne(data, JSON.parse(message).message, data.type);
                 } else {
                     data.type = 'light';
