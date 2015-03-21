@@ -18,13 +18,13 @@ var config = {
 };
 
 var styles = {
-    start:   colors.bold.green.dim,
-    stop:    colors.bold.red.dim,
-    socket:  colors.bold.magenta,
-    message: colors.bold.green.dim,
     info:    colors.bold.blue,
+    error:   colors.bold.red.dim,
+    socket:  colors.bold.magenta,
+    stop:    colors.bold.red.dim,
+    start:   colors.bold.green.dim,
+    message: colors.bold.green.dim,
     pm:      colors.bold.yellow.dim,
-    error:   colors.bold.red.dim
 }
 
 if(config.ssl) {
@@ -32,7 +32,6 @@ if(config.ssl) {
         key: fs.readFileSync('/path/to/your/ssl.key'),
         cert: fs.readFileSync('/path/to/your/ssl.crt')
     },
-    
     server = https.createServer(options);
 }
 
@@ -55,8 +54,8 @@ if(config.readline) {
 
 // Express
 app.set('view engine', 'ejs');
-app.use('/chat', express.static(__dirname + '/public'));
 app.use(favicon(__dirname + '/public/img/favicon.png'));
+app.use('/chat', express.static(__dirname + '/public'));
 
 app.get('/chat', function (req, res) {
     res.render('pages/index');
@@ -90,13 +89,16 @@ chat.on('connection', function(conn) {
     };
     
     conn.write(JSON.stringify({type:'server', info:'clients', clients:users}));
+    conn.write(JSON.stringify({type:'server', info:'user', client:users[uid]}));
     conn.on('data', function(message) {
         try {
             var data = JSON.parse(message);
 
-            if(data.type == 'update') updateUser(conn.id, data.user);
-            else if(data.type == 'pm') consoleLog(data.type, colors.underline(clients[conn.id].un) + ' to ' + colors.underline(data.extra) + ': '+ data.message);
-            else consoleLog('message', '[' + data.type.charAt(0).toUpperCase() + data.type.substring(1) + '] ' + colors.underline(clients[conn.id].un) +': ' + data.message);
+            if(data.type == 'ping') return false;
+            if(data.type == 'delete') deleteChat(data.message, conn.id);
+            if(data.type == 'update') return updateUser(conn.id, data.user);
+            if(data.type == 'pm') consoleLog('message', '[PM] ' + colors.underline(clients[conn.id].un) + ' to ' + colors.underline(data.extra) + ': ' + data.message);
+            else consoleLog('message', '[' + data.type.charAt(0).toUpperCase() + data.type.substring(1) + '] ' + colors.underline(clients[conn.id].un) + ': ' + data.message);
 
             if(data.type != 'update') sendSocket(clients[conn.id], message);
         } catch(err) {
@@ -116,6 +118,11 @@ chat.installHandlers(server, {prefix:'/socket',log:function(){}});
 
 
 // Util
+function deleteChat(chat, user) {
+    if(clients[user].op)
+        sendToAll({type:'server', info:'delete', mid:chat})
+}
+
 function updateUser(id, name) {
     if(name.length > 2 &&  name.length < 17 && name.indexOf(' ') < 0 && !checkUser(name) && name.match(alphanumeric)) {
         if(clients[id].un == null) {
@@ -185,6 +192,7 @@ function sendSocket(user, message) {
     data.time = getTime();
     data.type = escapeHtml(data.type);
     data.message = escapeHtml(data.message);
+    data.mid = (Math.random() + 1).toString(36).substr(2, 5);
 
     switch(data.type) {
         case 'pm':
@@ -296,7 +304,7 @@ function readLine() {
 
         rl.prompt();
     }).on('close', function() {
-        consoleLog('stop', 'Shutting down');
+        consoleLog('stop', 'Shutting down\n');
         process.exit(0);
     });
 }

@@ -1,13 +1,16 @@
 // Variables
-var timer,
+var user,
+    timer,
     socket,
     oldname,
     username,
     clients = [],
     nmr = 0,
     dev = false,
-    version = 'BETA 0.12.3',
+    unread = 0,
+    focus = true,
     connected = false,
+    version = 'BETA 0.14.13',
     blop = new Audio("sounds/blop.wav");
 
 emojione.ascii = true;
@@ -18,12 +21,12 @@ document.getElementById('version').innerHTML = version;
 var regex = /(&zwj;|&nbsp;)/g;
 
 var ping = setInterval(function(){
-    socket.send(JSON.stringify({data: 'ping'}));
+    socket.send(JSON.stringify({type: 'ping'}));
 }, 60 * 1000);
 
 // Connection
 var connect = function() {
-    socket = new WebSocket('wss://igorantun.com/socket/websocket');
+    socket = new WebSocket('ws://localhost:3000/socket/websocket');
 
     socket.onopen = function() {
         console.info('Connection established.');
@@ -90,24 +93,42 @@ var connect = function() {
                     clients = data.clients;
                     document.getElementById('users').innerHTML = Object.keys(clients).length + ' USERS';
                     break;
+
+                case 'delete':
+                    $('div[data-mid="' + data.mid + '"]').remove();
+                    break;
+
+                case 'user':
+                    user = data.client.id;
+                    break;
             }
-        } else if(data.type == 'kick') {
+        } else if(data.type == 'kick' && data.extra == username) {
             location.reload()
         } else {
             if(data.message.indexOf('@' + username) > -1)
                 data.type = 'mention';
 
-            showChat(data.type, data.user, data.message, data.time, data.subtxt);
+            showChat(data.type, data.user, data.message, data.time, data.subtxt, data.mid);
         }
 
-        if((data.type == 'op' || data.type == 'deop') && data.extra == username)  {
-            if(data.type == 'op') $('#admin').show();
-            if(data.type == 'deop') $('#admin').hide();
+        if((data.type == 'op' || data.type == 'deop')) {
+            if(data.type == 'op') {
+                if(data.extra == username) $('#admin').show();
+                clients[getUserByName(data.extra).id].op = true;
+            }
+            if(data.type == 'deop') {
+                if(data.extra == username) $('#admin').hide();
+                clients[getUserByName(data.extra).id].op = false;
+            }
         }
 
         if(data.type == 'global' || data.type == 'pm' || data.type == 'mention') {
-            if(document.getElementById('sound').checked)
-                blop.play();
+            if(!focus) {
+                unread++;
+                document.title = '(' + unread + ') Node.JS Chat';
+                if(document.getElementById('sound').checked)
+                    blop.play();
+            }
         }
     }
 };
@@ -130,6 +151,12 @@ function updateInfo() {
 
 
 // Utilities
+function getUserByName(name) {
+    for(client in clients)
+        if(clients[client].un == name)
+            return clients[client];
+}
+
 function updateBar(icon, placeholder, disable) {
     document.getElementById('icon').className = 'mdi ' + icon;
     $('#message').attr('placeholder', placeholder);
@@ -137,16 +164,15 @@ function updateBar(icon, placeholder, disable) {
     $('#send').prop('disabled', disable);
 }
 
-function showChat(type, user, message, time, subtxt) {
-    if(type == 'global' || type == 'kick' || type == 'info' || type == 'light' || type == 'help' || type == 'op' || type == 'deop')
-        user = 'System';
-    if(type == 'me' || type == 'em')
-        type = 'emote';
+function showChat(type, user, message, time, subtxt, mid) {
+    if(type == 'global' || type == 'kick' || type == 'info' || type == 'light' || type == 'help' || type == 'op' || type == 'deop') user = 'System';
+    if(type == 'me' || type == 'em') type = 'emote';
+    if(!mid) mid == 'system';
 
     if(!subtxt)
-        $('#panel').append('<div class="' + type + '""><span class="name"><b>' + user + '</b></span><span class="timestamp">' + time + '</span><span class="msg">' + message + '</span></div>');
+        $('#panel').append('<div data-mid="' + mid + '" class="' + type + '""><span class="name"><b><a href="javascript:void(0)">' + user + '</a></b></span><span class="delete"><a href="javascript:void(0)">DELETE</a></span><span class="timestamp">' + time + '</span><span class="msg">' + message + '</span></div>');
     else
-        $('#panel').append('<div class="' + type + '""><span class="name"><b>' + user + '</b></span><span class="timestamp">(' + subtxt + ') ' + time + '</span><span class="msg">' + message + '</span></div>');
+        $('#panel').append('<div  data-mid="' + mid + '" class="' + type + '""><span class="name"><b><a href="javascript:void(0)">' + user + '</a></b></span><span class="timestamp">(' + subtxt + ') ' + time + '</span><span class="msg">' + message + '</span></div>');
     
     $('#panel').animate({scrollTop: $('#panel').prop("scrollHeight")}, 500);
     updateStyle();
@@ -237,10 +263,15 @@ function getTime() {
 
 function updateStyle() {
     $('#panel').linkify();
+    var element = document.getElementsByClassName('msg')[nmr];
+
+    if(element.innerHTML && element.innerHTML.indexOf('&gt;') == 0 && document.getElementById('greentext').checked)
+        element.style.color = '#689f38';
+
     if(document.getElementById('emoji').checked) {
-        var input = document.getElementsByClassName('msg')[nmr].innerHTML;
-        var output = emojione.shortnameToImage(document.getElementsByClassName('msg')[nmr].innerHTML);
-        document.getElementsByClassName('msg')[nmr].innerHTML = output;
+        var input = element.innerHTML;
+        var output = emojione.shortnameToImage(element.innerHTML);
+        element.innerHTML = output;
     }
 }
 
@@ -262,15 +293,57 @@ $(document).ready(function() {
         $('#users-dialog').modal('show');
     });
 
-    $('#send').bind("click", function() {
+    $('#panel').on('mouseenter', '.message', function() {
+        if(clients[user].op) {
+            $(this).find('span:eq(1)').show();
+            $(this).find('span:eq(2)').hide();
+        }
+    });
+
+    $('#panel').on('mouseleave', '.message',function() {
+        if(clients[user].op) {
+            $(this).find('span:eq(1)').hide();
+            $(this).find('span:eq(2)').show();
+        }
+    });
+
+    $('#panel').on('mouseenter', '.emote', function() {
+        if(clients[user].op) {
+            $(this).find('span:eq(1)').show();
+            $(this).find('span:eq(2)').hide();
+        }
+    });
+
+    $('#panel').on('mouseleave', '.emote', function() {
+        if(clients[user].op) {
+            $(this).find('span:eq(1)').hide();
+            $(this).find('span:eq(2)').show();
+        }
+    });
+
+    $('#panel').on('click', '.delete', function(e) {
+        var value = $(this)[0].parentElement.attributes[0].value;
+        sendSocket(value, 'delete');
+    });
+
+    $('#panel').on('click', '.name', function(e) {
+        $('#message').val('@' + $(this)[0].children[0].children[0].innerHTML + ' ');
+        $('#message').focus();
+    });
+
+    $('.message').bind('click', function(e) {
+        console.log($(e.target)[0].parentNode.attributes[0].value);
+    });
+
+    $('#send').bind('click', function() {
         handleInput();
     });
 
-    $('#admin').bind("click", function() {
+    $('#admin').bind('click', function() {
         $('#admin-help-dialog').modal('show');
     });
 
-    $('#help').bind("click", function() {
+    $('#help').bind('click', function() {
         $('#help-dialog').modal('show');
     });
 
@@ -280,3 +353,13 @@ $(document).ready(function() {
         }
     });
 });
+
+window.onfocus = function() {
+    document.title = "Node.JS Chat";
+    focus = true;
+    unread = 0;
+};
+
+window.onblur = function() {
+    focus = false;
+};

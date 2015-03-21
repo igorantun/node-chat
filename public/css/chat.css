@@ -4,7 +4,7 @@
     max-height: 300px;
 }
 
-#emoji, #sound {
+#emoji, #sound, #greentext{
     margin-left: 10px;
 }
 
@@ -14,6 +14,10 @@
 
 .name {
     float: left;
+}
+
+a, a:hover {
+    color: inherit!important;
 }
 
 .msg {
@@ -30,16 +34,23 @@
     margin-left: 20px;
 }
 
-.pm, .mention {
+.delete {
+    float: right;
+    font-size: 8pt;
+    font-weight: bold;
+    display: none;
+}
+
+.pm , .mention {
     color: #eb9d00;
     font-weight: bold;
 }
 
-.emote span:nth-child(3){
+.emote span:nth-child(4){
     font-style: italic;
 }
 
-.global, .kick, .op, .deop {
+.global, .kick, .op , .deop {
     color: #f55549;
 }
 
