@@ -10,7 +10,7 @@ var user,
     unread = 0,
     focus = true,
     connected = false,
-    version = 'BETA 0.15.19',
+    version = 'BETA 0.15.21',
     blop = new Audio("sounds/blop.wav");
 
 emojione.ascii = true;

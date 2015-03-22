@@ -50,7 +50,7 @@ a, a:hover {
 }
 
 .global, .kick, .op , .deop, .ban{
-    color: #f55549;
+    color: #f55549!important;
 }
 
 .info {

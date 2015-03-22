@@ -174,7 +174,7 @@ function updateUser(id, name) {
 
         if(!name.match(alphanumeric)) motive = 'format';
         if(name.length < 3 || name.length > 16) motive = 'length';
-        if(checkUser(name) ||  name != 'Console' || name != 'System') motive = 'taken';
+        if(checkUser(name) ||  name == 'Console' || name == 'System') motive = 'taken';
         if(clients[id].un != null) check = true;
 
         clients[id].con.write(JSON.stringify({type:'server', info:'rejected', reason:motive, keep:check}));
@@ -214,7 +214,6 @@ function handleSocket(user, message) {
 
     data.id = user.id;
     data.user = user.un;
-    data.time = getTime();
     data.type = escapeHtml(data.type);
     data.message = escapeHtml(data.message);
     data.mid = (Math.random() + 1).toString(36).substr(2, 5);
@@ -319,12 +318,9 @@ if(config.readline) readLine();
 function readLine() {
     rl.on('line', function(line) {
         var type = line.substring(1).split(' ')[0].toLowerCase(),
+            data = {user: 'Console'},
             action,
-            user,
-            data = {
-                user: 'Console',
-                time: getTime()
-            };
+            user;
 
         if(line.charAt(0) == '/') {
             switch(type) {
