@@ -4,7 +4,7 @@
     max-height: 300px;
 }
 
-#emoji, #sound, #greentext{
+#emoji, #sound, #desktop, #greentext{
     margin-left: 10px;
 }
 
@@ -12,12 +12,28 @@
     font-size: 20px;
 }
 
+a, a:hover {
+    color: inherit!important;
+}
+
 .name {
     float: left;
 }
 
-a, a:hover {
-    color: inherit!important;
+.self {
+    color: #eb9d00!important;
+}
+
+.helper {
+    color: #55aef6!important;
+}
+
+.moderator {
+    color: #689f38!important;
+}
+
+.administrator {
+    color: #f55549!important;
 }
 
 .msg {
@@ -45,11 +61,11 @@ a, a:hover {
     color: #eb9d00;
 }
 
-.emote span:nth-child(4){
+.emote span:nth-child(4) {
     font-style: italic;
 }
 
-.global, .kick, .op , .deop, .ban{
+.global, .kick, .role, .ban {
     color: #f55549!important;
 }
 

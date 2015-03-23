@@ -10,7 +10,7 @@ var user,
     unread = 0,
     focus = true,
     connected = false,
-    version = 'BETA 0.15.21',
+    version = 'BETA 0.17.29',
     blop = new Audio("sounds/blop.wav");
 
 emojione.ascii = true;
@@ -22,7 +22,8 @@ var regex = /(&zwj;|&nbsp;)/g;
 
 var ping = setInterval(function(){
     socket.send(JSON.stringify({type: 'ping'}));
-}, 60 * 1000);
+}, 50 * 1000);
+
 
 // Connection
 var connect = function() {
@@ -34,6 +35,7 @@ var connect = function() {
     };
 
     socket.onclose = function() {
+        $('#admin').hide();
         if(connected) {
             updateBar('mdi-action-autorenew spin', 'Connection lost, reconnecting...', true);
 
@@ -48,6 +50,9 @@ var connect = function() {
     socket.onmessage = function(e) {
         var data = JSON.parse(e.data);
         if(dev) console.log(data);
+
+        if(data.type == 'delete')
+            return $('div[data-mid="' + data.message + '"]').remove();
 
         if(data.type == 'server') {
             switch(data.info) {
@@ -100,10 +105,6 @@ var connect = function() {
                     document.getElementById('users').innerHTML = Object.keys(clients).length + ' USERS';
                     break;
 
-                case 'delete':
-                    $('div[data-mid="' + data.mid + '"]').remove();
-                    break;
-
                 case 'user':
                     user = data.client.id;
                     break;
@@ -117,14 +118,19 @@ var connect = function() {
             showChat(data.type, data.user, data.message, data.subtxt, data.mid);
         }
 
-        if((data.type == 'op' || data.type == 'deop')) {
-            if(data.type == 'op') {
-                if(data.extra == username) $('#admin').show();
-                clients[getUserByName(data.extra).id].op = true;
-            }
-            if(data.type == 'deop') {
-                if(data.extra == username) $('#admin').hide();
-                clients[getUserByName(data.extra).id].op = false;
+        if(data.type == 'role') {
+            if(getUserByName(data.extra) != undefined) {
+                if(data.extra == username && data.role > 0) {
+                    $('#admin').show();
+                    $('#menu-admin').show();
+                }
+
+                if(data.extra == username && data.role == 0) {
+                    $('#admin').hide();
+                    $('#menu-admin').hide();
+                }
+
+                clients[getUserByName(data.extra).id].role = data.role;
             }
         }
 
@@ -134,6 +140,8 @@ var connect = function() {
                 document.title = '(' + unread + ') Node.JS Chat';
                 if(document.getElementById('sound').checked)
                     blop.play();
+                if(document.getElementById('desktop').checked)
+                    desktopNotif(data.user + ': ' + data.message);
             }
         }
     }
@@ -171,14 +179,24 @@ function updateBar(icon, placeholder, disable) {
 }
 
 function showChat(type, user, message, subtxt, mid) {
-    if(type == 'global' || type == 'kick' || type == 'ban' || type == 'info' || type == 'light' || type == 'help' || type == 'op' || type == 'deop') user = 'System';
+    if(type == 'global' || type == 'kick' || type == 'ban' || type == 'info' || type == 'light' || type == 'help' || type == 'role') user = 'System';
     if(type == 'me' || type == 'em') type = 'emote';
     if(!mid) mid == 'system';
 
+    var nameclass = '';
+    if(type == 'emote' || type == 'message') {
+        if(user == username && getUserByName(user).role == 0) nameclass = 'self';
+        else {
+            if(getUserByName(user).role == 1) nameclass = 'helper';
+            if(getUserByName(user).role == 2) nameclass = 'moderator';
+            if(getUserByName(user).role == 3) nameclass = 'administrator';
+        }
+    }
+
     if(!subtxt)
-        $('#panel').append('<div data-mid="' + mid + '" class="' + type + '""><span class="name"><b><a href="javascript:void(0)">' + user + '</a></b></span><span class="delete"><a href="javascript:void(0)">DELETE</a></span><span class="timestamp">' + getTime() + '</span><span class="msg">' + message + '</span></div>');
+        $('#panel').append('<div data-mid="' + mid + '" class="' + type + '""><span class="name ' + nameclass + '"><b><a href="javascript:void(0)">' + user + '</a></b></span><span class="delete"><a href="javascript:void(0)">DELETE</a></span><span class="timestamp">' + getTime() + '</span><span class="msg">' + message + '</span></div>');
     else
-        $('#panel').append('<div  data-mid="' + mid + '" class="' + type + '""><span class="name"><b><a href="javascript:void(0)">' + user + '</a></b></span><span class="timestamp">(' + subtxt + ') ' + getTime() + '</span><span class="msg">' + message + '</span></div>');
+        $('#panel').append('<div  data-mid="' + mid + '" class="' + type + '""><span class="name ' + nameclass + '"><b><a href="javascript:void(0)">' + user + '</a></b></span><span class="timestamp">(' + subtxt + ') ' + getTime() + '</span><span class="msg">' + message + '</span></div>');
     
     $('#panel').animate({scrollTop: $('#panel').prop("scrollHeight")}, 500);
     updateStyle();
@@ -196,22 +214,27 @@ function handleInput() {
             var command = value.substring(1).split(' ');
 
             switch(command[0].toLowerCase()) {
-                case 'pm': case 'op': case 'deop': case 'kick': case 'ban': case 'name': case 'alert': case 'me': case 'em':
+                case 'pm': case 'msg': case 'role': case 'kick': case 'ban': case 'name': case 'alert': case 'me': case 'em':
                     if(value.substring(command[0].length).length > 1) {
-                        if(command[0] == 'pm' && value.substring(command[0].concat(command[1]).length).length > 2)
+                        if((command[0] == 'pm' || command[0] == 'msg') && value.substring(command[0].concat(command[1]).length).length > 2)
                             sendSocket(value.substring(command[0].concat(command[1]).length + 2), 'pm', command[1], 'PM');
-                        else if(command[0] == 'pm')
-                            showChat('light', 'Error', 'Use /pm [user] [message]');
+                        else if(command[0] == 'pm' || command[0] == 'msg')
+                            showChat('light', 'Error', 'Use /' + command[0] + ' [user] [message]');
 
                         if(command[0] == 'ban' && value.substring(command[0].concat(command[1]).length).length > 2)
                             sendSocket(command[1], 'ban', command[2]);
                         else if(command[0] == 'ban')
-                            showChat('light', 'Error', 'Use /ban [user] [message]');
+                            showChat('light', 'Error', 'Use /ban [user] [minutes]');
 
                         if(command[0] == 'alert')
                             sendSocket(value.substring(command[0].length + 2), 'global', null, username);
 
-                        if(command[0] == 'op' || command[0] == 'deop' || command[0] == 'kick' || command[0] == 'me' || command[0] == 'em')
+                        if((command[0] == 'role') && value.substring(command[0].concat(command[1]).length).length > 3)
+                            sendSocket(command[1], 'role', value.substring(command[0].concat(command[1]).length + 3));
+                        else if(command[0] == 'role')
+                            showChat('light', 'Error', 'Use /' + command[0] + ' [user] [0-3]');
+
+                        if(command[0] == 'kick' || command[0] == 'me' || command[0] == 'em')
                             sendSocket(value.substring(command[0].length + 2), command[0]);
 
                         if(command[0] == 'name') {
@@ -223,12 +246,14 @@ function handleInput() {
                         var variables;
                         if(command[0] == 'alert' || command[0] == 'me' || command[0] == 'em')
                             variables = ' [message]';
-                        if(command[0] == 'kick' || command[0] == 'op' || command[0] == 'deop')
-                            variables = ' [user]';
+                        if(command[0] == 'role')
+                            variables = ' [user] [0-3]';
                         if(command[0] == 'ban')
                             variables = ' [user] [minutes]';
                         if(command[0] == 'pm')
                             variables = ' [user] [message]';
+                        if(command[0] == 'kick')
+                            variables = ' [user]';
                         if(command[0] == 'name')
                             variables = ' [name]';
 
@@ -283,13 +308,15 @@ function updateStyle() {
     $('#panel').linkify();
     var element = document.getElementsByClassName('msg')[nmr];
 
-    if(document.getElementById('greentext').checked && element.innerHTML.indexOf('&gt;') == 0)
-        element.style.color = '#689f38';
+    if(element.innerHTML != undefined) {
+        if(document.getElementById('greentext').checked && element.innerHTML.indexOf('&gt;') == 0)
+            element.style.color = '#689f38';
 
-    if(document.getElementById('emoji').checked) {
-        var input = element.innerHTML;
-        var output = emojione.shortnameToImage(element.innerHTML);
-        element.innerHTML = output;
+        if(document.getElementById('emoji').checked) {
+            var input = element.innerHTML;
+            var output = emojione.shortnameToImage(element.innerHTML);
+            element.innerHTML = output;
+        }
     }
 }
 
@@ -302,7 +329,7 @@ $(document).ready(function() {
 
         for(var i in clients) {
             if(clients[i] != undefined) {
-                clients[i].op ? admin = ' - <b>Administrator</b></li>' : admin = '</li>';
+                clients[i].role > 0 ? admin = ' - <b>Administrator</b></li>' : admin = '</li>';
                 content += '<li><b>ID:</b> ' + clients[i].id + ' - <b>Name:</b> ' + clients[i].un + admin;
             }
         }
@@ -312,28 +339,28 @@ $(document).ready(function() {
     });
 
     $('#panel').on('mouseenter', '.message', function() {
-        if(clients[user].op) {
+        if(clients[user].role > 0) {
             $(this).find('span:eq(1)').show();
             $(this).find('span:eq(2)').hide();
         }
     });
 
     $('#panel').on('mouseleave', '.message',function() {
-        if(clients[user].op) {
+        if(clients[user].role > 0) {
             $(this).find('span:eq(1)').hide();
             $(this).find('span:eq(2)').show();
         }
     });
 
     $('#panel').on('mouseenter', '.emote', function() {
-        if(clients[user].op) {
+        if(clients[user].role > 0) {
             $(this).find('span:eq(1)').show();
             $(this).find('span:eq(2)').hide();
         }
     });
 
     $('#panel').on('mouseleave', '.emote', function() {
-        if(clients[user].op) {
+        if(clients[user].role > 0) {
             $(this).find('span:eq(1)').hide();
             $(this).find('span:eq(2)').show();
         }
@@ -357,12 +384,25 @@ $(document).ready(function() {
         handleInput();
     });
 
-    $('#admin').bind('click', function() {
+    $('#menu-admin').bind('click', function() {
         $('#admin-help-dialog').modal('show');
     });
 
     $('#help').bind('click', function() {
         $('#help-dialog').modal('show');
+    });
+
+    $('#options').bind('click', function() {
+        $('#options-dialog').modal('show');
+    });
+
+    $('#menu-options').bind('click', function() {
+        $('#options-dialog').modal('show');
+    });
+
+    $('#desktop').bind('change', function() {
+        if(Notification.permission !== "granted")
+            Notification.requestPermission();
     });
 
     $("#message").keypress(function(e) {
@@ -371,6 +411,18 @@ $(document).ready(function() {
         }
     });
 });
+
+
+// Intern
+function desktopNotif(message) {
+    if(!Notification) 
+        return;
+
+    var notification = new Notification('You\'ve got a new message', {
+        icon: 'http://i.imgur.com/ehB0QcM.png',
+        body: message
+    });
+}
 
 window.onfocus = function() {
     document.title = "Node.JS Chat";

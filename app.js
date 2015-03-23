@@ -29,8 +29,8 @@ var styles = {
 
 if(config.ssl) {
     var options = {
-        key: fs.readFileSync('/path/to/your/ssl.key'),
-        cert: fs.readFileSync('/path/to/your/ssl.crt')
+        key: fs.readFileSync('/your/path/to/ssl.key'),
+        cert: fs.readFileSync('/your/path/to/ssl.crt')
     },
     server = https.createServer(options);
 }
@@ -86,7 +86,7 @@ chat.on('connection', function(conn) {
         id: uid,
         un: null,
         ip: conn.headers['x-forwarded-for'],
-        op: false,
+        role: 0,
         con: conn
     };
 
@@ -94,7 +94,7 @@ chat.on('connection', function(conn) {
         id: uid,
         oldun: null,
         un: null,
-        op: false
+        role: 0
     };
     
     if(bans.indexOf(clients[conn.id].ip) > -1) {
@@ -119,7 +119,7 @@ chat.on('connection', function(conn) {
                 var data = JSON.parse(message);
 
                 if(data.type == 'ping') return false;
-                if(data.type == 'delete') deleteChat(data.message, conn.id);
+                if(data.type == 'delete' && clients[conn.id].role > 0) sendToAll({type:'server', info:'delete', mid:data.message})
                 if(data.type == 'update') return updateUser(conn.id, data.user);
                 if(data.type == 'pm') consoleLog('message', '[PM] ' + colors.underline(clients[conn.id].un) + ' to ' + colors.underline(data.extra) + ': ' + data.message);
                 else consoleLog('message', '[' + data.type.charAt(0).toUpperCase() + data.type.substring(1) + '] ' + colors.underline(clients[conn.id].un) + ': ' + data.message);
@@ -144,11 +144,6 @@ chat.installHandlers(server, {prefix:'/socket',log:function(){}});
 
 
 // Util
-function deleteChat(chat, user) {
-    if(clients[user].op)
-        sendToAll({type:'server', info:'delete', mid:chat})
-}
-
 function updateUser(id, name) {
     if(name.length > 2 && name.length < 17 && name.indexOf(' ') < 0 && !checkUser(name) && name.match(alphanumeric) && name != 'Console' && name != 'System') {
         if(clients[id].un == null) {
@@ -164,7 +159,7 @@ function updateUser(id, name) {
                 id: clients[id].id,
                 oldun: clients[id].un,
                 un: name,
-                op: clients[id].op
+                role: clients[id].role
             }
         });
         clients[id].un = name;
@@ -191,8 +186,7 @@ function sendToOne(data, user, type) {
     for(var client in clients) {
         if(clients[client].un == user) {
             if(type == 'message') clients[client].con.write(JSON.stringify(data));
-            if(type == 'deop') clients[client].op = false;
-            if(type == 'op') clients[client].op = true;
+            if(type == 'role') clients[client].role = data.role;
         }
     }
 }
@@ -207,6 +201,12 @@ function checkUser(user) {
             return true;
     }
     return false;
+}
+
+function getUserByName(name) {
+    for(client in clients)
+        if(clients[client].un == name)
+            return clients[client];
 }
 
 function handleSocket(user, message) {
@@ -232,52 +232,97 @@ function handleSocket(user, message) {
             }
             break;
 
-        case 'global': case 'kick': case 'ban': case 'op': case 'deop':
-            if(data.type == 'global' && user.op)
-                return sendToAll(data);
+        case 'global': case 'kick': case 'ban': case 'role':
+            if(user.role > 0) {
+                if(data.type == 'global') {
+                    if(user.role == 3) {
+                        return sendToAll(data);
+                    } else {
+                        data.subtxt = null;
+                        data.message = 'You don\'t have permission to do that';
+                        return sendBack(data, user);
+                    }
+                } else {
+                    data.subtxt = null;
+                    if(data.message != data.user) {
+                        if(checkUser(data.message)) {
+                            switch(data.type) {
+                                case 'ban':
+                                    var time = parseInt(data.extra);
 
-            if(!user.op || data.message == data.user) {
-                data.subtxt = null;
-                data.message = !user.op ? 'You are not an administrator' : 'You can\'t do that to yourself';
-                sendBack(data, user);
-            } else {
-                if(checkUser(data.message)) {
-                    if(data.type == 'ban') {
-                        var time = parseInt(data.extra)
-                        if(!isNaN(time)) {
-                            for(var client in clients) {
-                                if(clients[client].un == data.message)
-                                    bans.push(clients[client].ip);
-                            }
-                            data.extra = data.message;
-                            data.message = data.user + ' banned ' + data.message + ' from the server for ' + time + ' minutes';
+                                    if(!isNaN(time) && time > 0) {
+                                        if(user.role > 1 && getUserByName(data.message).role == 0) {
+                                            for(var client in clients) {
+                                                if(clients[client].un == data.message)
+                                                    bans.push(clients[client].ip);
+                                            }
+                                            data.extra = data.message;
+                                            data.message = data.user + ' banned ' + data.message + ' from the server for ' + time + ' minutes';
 
-                            setTimeout(function() {
-                                bans.splice(bans.indexOf(clients[user.con.id].ip))
-                            }, time * 1000 * 60);
+                                            setTimeout(function() {
+                                                bans.splice(bans.indexOf(clients[user.con.id].ip))
+                                            }, time * 1000 * 60);
 
-                            return sendToAll(data);
+                                            return sendToAll(data);
+                                        } else {
+                                            data.message = 'You don\'t have permission to do that';
+                                            return sendBack(data, user);
+                                        }
+                                    } else {
+                                        data.type = 'light';
+                                        data.message = 'Use /ban [user] [minutes]';
+                                        return sendToOne(data, data.user, 'message')
+                                    }
+                                    break;
+
+                                case 'role':
+                                    if(data.extra > -1 && data.extra < 4) {
+                                        if(user.role == 3) {
+                                            var role;
+                                            data.role = data.extra;
+                                            data.extra = data.message;
+
+                                            if(data.role == 0) role = 'User';
+                                            if(data.role == 1) role = 'Helper';
+                                            if(data.role == 2) role = 'Moderator';
+                                            if(data.role == 3) role = 'Administrator';
+                                            data.message = data.user + ' set ' + data.message + ' role to ' + role;
+                                            sendToOne(data, JSON.parse(message).message, 'role');
+                                        } else {
+                                            data.message = 'You don\'t have permission to do that';
+                                            return sendBack(data, user);
+                                        }
+                                    } else {
+                                        data.type = 'light';
+                                        data.message = 'Use /role [user] [0-3]';
+                                        return sendToOne(data, data.user, 'message')
+                                    }
+                                    break;
+
+                                case 'kick':
+                                    if(user.role > 1 && getUserByName(data.message).role == 0) {
+                                        data.extra = data.message;
+                                        data.message = data.user + ' kicked ' + data.message + ' from the server';
+                                    } else {
+                                        data.message = 'You don\'t have permission to do that';
+                                        return sendBack(data, user);
+                                    }
+                                    break;
+                            }                            
+                            sendToAll(data);
                         } else {
                             data.type = 'light';
-                            data.message = 'Use /ban [user] [minutes]';
-                            return sendToOne(data, data.user, 'message')
+                            data.message = 'User not found';
+                            sendBack(data, user);
                         }
+                    } else {
+                        data.message = 'You can\'t do that to yourself';
+                        sendBack(data, user);
                     }
-
-                    data.extra = data.message;
-                    if(data.type == 'kick') data.message = data.user + ' kicked ' + data.message + ' from the server';
-                    if(data.type == 'deop') data.message = data.user + ' removed ' + data.message + ' administrator permissions';
-                    if(data.type == 'op')   data.message = data.user + ' gave ' + data.message + ' administrator permissions';
-                    sendToAll(data);
-
-                    if(data.type == 'op' || data.type == 'deop')
-                        sendToOne(data, JSON.parse(message).message, data.type);
-                } else {
-                    data.type = 'light';
-                    data.subtxt = null;
-                    data.message = 'User not found';
-                    sendBack(data, user);
                 }
+            } else {
+                data.message = 'You don\'t have permission to do that';
+                sendBack(data, user);
             }
             break;
 
@@ -317,32 +362,18 @@ function consoleLog(type, message) {
 if(config.readline) readLine();
 function readLine() {
     rl.on('line', function(line) {
-        var type = line.substring(1).split(' ')[0].toLowerCase(),
-            data = {user: 'Console'},
-            action,
-            user;
-
-        if(line.charAt(0) == '/') {
-            switch(type) {
-                case 'op':
-                    action = 'gave '
-                    user = line.substring(4);
-                    break;
-                    
-                case 'deop':
-                    action = 'removed '
-                    user = line.substring(6);
-                    break;
-            }
-
-            var string = 'Console ' + action + user + ' administrator permissions';
+        var data = {};
+        if(line.indexOf('/role') == 0) {
+            var string = 'Console gave ' + line.substring(6) + ' administrator permissions';
 
             data.message = string;
-            data.type = type;
-            data.extra = user;
+            data.user = 'Console';
+            data.type = 'role';
+            data.extra = line.substring(6);
+            data.role = 3;
 
             sendToAll(data);
-            sendToOne(data, user, data.type);
+            sendToOne(data, line.substring(6), data.type);
         }
 
         rl.prompt();
