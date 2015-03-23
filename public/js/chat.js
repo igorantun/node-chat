@@ -10,7 +10,7 @@ var user,
     unread = 0,
     focus = true,
     connected = false,
-    version = 'BETA 0.17.29',
+    version = 'BETA 0.17.34',
     blop = new Audio("sounds/blop.wav");
 
 emojione.ascii = true;
@@ -194,9 +194,9 @@ function showChat(type, user, message, subtxt, mid) {
     }
 
     if(!subtxt)
-        $('#panel').append('<div data-mid="' + mid + '" class="' + type + '""><span class="name ' + nameclass + '"><b><a href="javascript:void(0)">' + user + '</a></b></span><span class="delete"><a href="javascript:void(0)">DELETE</a></span><span class="timestamp">' + getTime() + '</span><span class="msg">' + message + '</span></div>');
+        $('#panel').append('<div data-mid="' + mid + '" class="' + type + '""><span class="name ' + nameclass + '"><b><a class="namelink" href="javascript:void(0)">' + user + '</a></b></span><span class="delete"><a href="javascript:void(0)">DELETE</a></span><span class="timestamp">' + getTime() + '</span><span class="msg">' + message + '</span></div>');
     else
-        $('#panel').append('<div  data-mid="' + mid + '" class="' + type + '""><span class="name ' + nameclass + '"><b><a href="javascript:void(0)">' + user + '</a></b></span><span class="timestamp">(' + subtxt + ') ' + getTime() + '</span><span class="msg">' + message + '</span></div>');
+        $('#panel').append('<div  data-mid="' + mid + '" class="' + type + '""><span class="name ' + nameclass + '"><b><a class="namelink" href="javascript:void(0)">' + user + '</a></b></span><span class="timestamp">(' + subtxt + ') ' + getTime() + '</span><span class="msg">' + message + '</span></div>');
     
     $('#panel').animate({scrollTop: $('#panel').prop("scrollHeight")}, 500);
     updateStyle();
@@ -329,7 +329,10 @@ $(document).ready(function() {
 
         for(var i in clients) {
             if(clients[i] != undefined) {
-                clients[i].role > 0 ? admin = ' - <b>Administrator</b></li>' : admin = '</li>';
+                if(clients[i].role == 0) admin = '</li>'
+                if(clients[i].role == 1) admin = ' - <b>Helper</b></li>';
+                if(clients[i].role == 2) admin = ' - <b>Moderator</b></li>';
+                if(clients[i].role == 3) admin = ' - <b>Administrator</b></li>';
                 content += '<li><b>ID:</b> ' + clients[i].id + ' - <b>Name:</b> ' + clients[i].un + admin;
             }
         }

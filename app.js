@@ -29,8 +29,8 @@ var styles = {
 
 if(config.ssl) {
     var options = {
-        key: fs.readFileSync('/your/path/to/ssl.key'),
-        cert: fs.readFileSync('/your/path/to/ssl.crt')
+        key: fs.readFileSync('/path/to/your/ssl.key'),
+        cert: fs.readFileSync('/path/to/your/ssl.crt')
     },
     server = https.createServer(options);
 }
@@ -186,7 +186,10 @@ function sendToOne(data, user, type) {
     for(var client in clients) {
         if(clients[client].un == user) {
             if(type == 'message') clients[client].con.write(JSON.stringify(data));
-            if(type == 'role') clients[client].role = data.role;
+            if(type == 'role') {
+                clients[client].role = data.role;
+                users[clients[client].id].role = data.role;
+            }
         }
     }
 }
@@ -288,6 +291,7 @@ function handleSocket(user, message) {
                                             if(data.role == 3) role = 'Administrator';
                                             data.message = data.user + ' set ' + data.message + ' role to ' + role;
                                             sendToOne(data, JSON.parse(message).message, 'role');
+                                            sendToAll({type:'server', info:'clients', clients:users});
                                         } else {
                                             data.message = 'You don\'t have permission to do that';
                                             return sendBack(data, user);

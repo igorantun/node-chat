@@ -12,12 +12,12 @@
     font-size: 20px;
 }
 
-a, a:hover {
-    color: inherit!important;
-}
-
 .name {
     float: left;
+}
+
+.namelink {
+    color: inherit!important;
 }
 
 .self {
