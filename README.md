@@ -1,6 +1,6 @@
 Node.JS Chat
 ============
-[![GitHub Stars](https://img.shields.io/github/stars/IgorAntun/node-chat.svg?style=flat-square)](https://github.com/IgorAntun/node-chat/stargazers) [![GitHub Issues](https://img.shields.io/github/issues/IgorAntun/node-chat.svg?style=flat-square)](https://github.com/IgorAntun/node-chat/issues) [![Current Version](https://img.shields.io/badge/version-0.15.21-green.svg?style=flat-square)](https://github.com/IgorAntun/node-chat) [![Live Demo](https://img.shields.io/badge/demo-online-green.svg?style=flat-square)](https://igorantun.com/chat)
+[![GitHub Stars](https://img.shields.io/github/stars/IgorAntun/node-chat.svg?style=flat-square)](https://github.com/IgorAntun/node-chat/stargazers) [![GitHub Issues](https://img.shields.io/github/issues/IgorAntun/node-chat.svg?style=flat-square)](https://github.com/IgorAntun/node-chat/issues) [![Current Version](https://img.shields.io/badge/version-0.17.34-green.svg?style=flat-square)](https://github.com/IgorAntun/node-chat) [![Live Demo](https://img.shields.io/badge/demo-online-green.svg?style=flat-square)](https://igorantun.com/chat)
 
 This is a node.js chat application powered by SockJS and Express that provides the main functions you'd expect from a chat, such as emojis, private messages, an admin system, etc.
 
