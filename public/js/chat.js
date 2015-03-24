@@ -10,7 +10,7 @@ var user,
     unread = 0,
     focus = true,
     connected = false,
-    version = 'BETA 0.17.34',
+    version = 'BETA 0.17.35',
     blop = new Audio("sounds/blop.wav");
 
 emojione.ascii = true;
@@ -20,16 +20,15 @@ document.getElementById('version').innerHTML = version;
 
 var regex = /(&zwj;|&nbsp;)/g;
 
-var ping = setInterval(function(){
-    socket.send(JSON.stringify({type: 'ping'}));
-}, 50 * 1000);
-
 
 // Connection
 var connect = function() {
     socket = new WebSocket('ws://localhost:3000/socket/websocket');
 
     socket.onopen = function() {
+        var ping = setInterval(function(){
+            socket.send(JSON.stringify({type: 'ping'}));
+        }, 50 * 1000);
         console.info('Connection established.');
         updateInfo();
     };
