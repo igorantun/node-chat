@@ -4,13 +4,16 @@ var user,
     socket,
     oldname,
     username,
+    typeTimer,
     clients = [],
+    usersTyping = [],
     nmr = 0,
     dev = false,
     unread = 0,
     focus = true,
+    typing = false,
     connected = false,
-    version = 'BETA 0.17.35',
+    version = 'BETA 0.18.11',
     blop = new Audio("sounds/blop.wav");
 
 emojione.ascii = true;
@@ -52,6 +55,21 @@ var connect = function() {
 
         if(data.type == 'delete')
             return $('div[data-mid="' + data.message + '"]').remove();
+
+        if(data.type == 'typing') {
+            var string;
+            if(data.user != username) {
+                if(data.typing)
+                    usersTyping.push(data.user);
+                else
+                    usersTyping.splice(usersTyping.indexOf(data.user), 1);
+            }
+
+            if(usersTyping.length > 1) string = ' are writing...';
+            else if(usersTyping.length == 1) string = ' is writing...';
+            else string = '<br>';
+            return document.getElementById('typing').innerHTML = usersTyping.join(', ') + string;
+        }
 
         if(data.type == 'server') {
             switch(data.info) {
@@ -378,10 +396,6 @@ $(document).ready(function() {
         $('#message').focus();
     });
 
-    $('.message').bind('click', function(e) {
-        console.log($(e.target)[0].parentNode.attributes[0].value);
-    });
-
     $('#send').bind('click', function() {
         handleInput();
     });
@@ -409,7 +423,23 @@ $(document).ready(function() {
 
     $("#message").keypress(function(e) {
         if(e.which == 13) {
+            if(connected && typing) {
+                typing = false;
+                clearTimeout(typeTimer);
+                socket.send(JSON.stringify({type:'typing', typing:false}));
+            }
             handleInput();
+        } else if(connected) {
+            if(!typing) {
+                typing = true;
+                socket.send(JSON.stringify({type:'typing', typing:true}));
+            }
+
+            clearTimeout(typeTimer);
+            typeTimer = setTimeout(function() {
+                typing = false;
+                socket.send(JSON.stringify({type:'typing', typing:false}));
+            }, 2000);
         }
     });
 });

@@ -29,8 +29,8 @@ var styles = {
 
 if(config.ssl) {
     var options = {
-        key: fs.readFileSync('/path/to/your/ssl.key'),
-        cert: fs.readFileSync('/path/to/your/ssl.crt')
+        key: fs.readFileSync('/your/path/to/ssl.key'),
+        cert: fs.readFileSync('/your/path/to/ssl.crt')
     },
     server = https.createServer(options);
 }
@@ -112,14 +112,15 @@ chat.on('connection', function(conn) {
 
         if(rateLimit[conn.id] > 1)
             rateLimit[conn.id] = 1;
-        if(rateLimit[conn.id] < 1 && JSON.parse(message).type != 'delete')
+        if(rateLimit[conn.id] < 1 && JSON.parse(message).type != 'delete' && JSON.parse(message).type != 'typing')
             return conn.write(JSON.stringify({type:'server', info:'spam'}));
         else {
             try {
                 var data = JSON.parse(message);
 
                 if(data.type == 'ping') return false;
-                if(data.type == 'delete' && clients[conn.id].role > 0) sendToAll({type:'server', info:'delete', mid:data.message})
+                if(data.type == 'typing') return sendToAll({type:'typing', typing:data.typing, user:clients[conn.id].un});
+                if(data.type == 'delete' && clients[conn.id].role > 0) sendToAll({type:'server', info:'delete', mid:data.message});
                 if(data.type == 'update') return updateUser(conn.id, data.user);
                 if(data.type == 'pm') consoleLog('message', '[PM] ' + colors.underline(clients[conn.id].un) + ' to ' + colors.underline(data.extra) + ': ' + data.message);
                 else consoleLog('message', '[' + data.type.charAt(0).toUpperCase() + data.type.substring(1) + '] ' + colors.underline(clients[conn.id].un) + ': ' + data.message);

@@ -12,6 +12,12 @@
     font-size: 20px;
 }
 
+#typing {
+    margin-left: 10px;
+    font-style: italic;
+    font-size: 9pt;
+}
+
 .name {
     float: left;
 }
