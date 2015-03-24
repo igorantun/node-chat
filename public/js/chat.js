@@ -13,7 +13,7 @@ var user,
     focus = true,
     typing = false,
     connected = false,
-    version = 'BETA 0.18.11',
+    version = 'BETA 0.18.22',
     blop = new Audio("sounds/blop.wav");
 
 emojione.ascii = true;
@@ -65,10 +65,20 @@ var connect = function() {
                     usersTyping.splice(usersTyping.indexOf(data.user), 1);
             }
 
-            if(usersTyping.length > 1) string = ' are writing...';
-            else if(usersTyping.length == 1) string = ' is writing...';
-            else string = '<br>';
-            return document.getElementById('typing').innerHTML = usersTyping.join(', ') + string;
+            
+            if(usersTyping.length == 1) {
+                string = usersTyping + ' is writing...';
+            } else if(usersTyping.length > 4) {
+                string = 'Several people are writing...';
+            } else if(usersTyping.length > 1) {
+                var lastUser = usersTyping.pop();
+                string = usersTyping.join(', ') + ' and ' + lastUser + ' are writing...';
+                usersTyping.push(lastUser);
+            } else {
+                string = '<br>';
+            }
+
+            return document.getElementById('typing').innerHTML = string;
         }
 
         if(data.type == 'server') {

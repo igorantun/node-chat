@@ -29,8 +29,8 @@ var styles = {
 
 if(config.ssl) {
     var options = {
-        key: fs.readFileSync('/your/path/to/ssl.key'),
-        cert: fs.readFileSync('/your/path/to/ssl.crt')
+        key: fs.readFileSync('/path/to/your/ssl.key'),
+        cert: fs.readFileSync('/path/to/your/ssl.crt')
     },
     server = https.createServer(options);
 }
@@ -123,7 +123,7 @@ chat.on('connection', function(conn) {
                 if(data.type == 'delete' && clients[conn.id].role > 0) sendToAll({type:'server', info:'delete', mid:data.message});
                 if(data.type == 'update') return updateUser(conn.id, data.user);
                 if(data.type == 'pm') consoleLog('message', '[PM] ' + colors.underline(clients[conn.id].un) + ' to ' + colors.underline(data.extra) + ': ' + data.message);
-                else consoleLog('message', '[' + data.type.charAt(0).toUpperCase() + data.type.substring(1) + '] ' + colors.underline(clients[conn.id].un) + ': ' + data.message);
+                else //consoleLog('message', '[' + data.type.charAt(0).toUpperCase() + data.type.substring(1) + '] ' + colors.underline(clients[conn.id].un) + ': ' + data.message);
 
                 if(data.type != 'update') handleSocket(clients[conn.id], message);
             } catch(err) {
