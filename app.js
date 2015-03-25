@@ -1,19 +1,22 @@
 // Variables
-var favicon = require('serve-favicon'),
-    readline = require('readline'),
-    express = require('express'),
-    colors = require('colors'),
-    sockjs = require('sockjs'),
-    https = require('https'),
-    path = require('path'),
-    fs = require('fs'),
-    app = express();
+var favicon = require('serve-favicon');
+var readline = require('readline');
+var express = require('express');
+var colors = require('colors');
+var logger = require('./lib/logger/');
+var mysql = require('./lib/mysql/');
+var sockjs = require('sockjs');
+var https = require('https');
+var pack = require("./package.json");
+var path = require('path');
+var fs = require('fs');
+var app = express();
 
 var config = {
     log: true,
-    readline: true,
+    readline: false, //This is breaking on some machines, also to be deprecated with express routes.
     ipadr: '127.0.0.1' || 'localhost',
-    port: 3000,
+    port: 3001,
     ssl: false
 };
 
@@ -24,8 +27,8 @@ var styles = {
     stop:    colors.bold.red.dim,
     start:   colors.bold.green.dim,
     message: colors.bold.green.dim,
-    pm:      colors.bold.yellow.dim,
-}
+    pm:      colors.bold.yellow.dim
+};
 
 if(config.ssl) {
     var options = {
@@ -54,12 +57,12 @@ if(config.readline) {
 
 
 // Express
+app.use(logger.express);
 app.set('view engine', 'ejs');
 app.use(favicon(__dirname + '/public/img/favicon.png'));
 app.use('/chat', express.static(__dirname + '/public'));
-
 app.get('/chat', function (req, res) {
-    res.render('pages/index');
+    res.render('pages/index', {version:pack.version});
 });
       
 
