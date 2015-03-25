@@ -16,7 +16,7 @@ var config = {
     log: true,
     readline: false, //This is breaking on some machines, also to be deprecated with express routes.
     ipadr: '127.0.0.1' || 'localhost',
-    port: 3001,
+    port: 3000,
     ssl: false
 };
 
