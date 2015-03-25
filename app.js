@@ -64,6 +64,10 @@ app.use('/chat', express.static(__dirname + '/public'));
 app.get('/chat', function (req, res) {
     res.render('pages/index', {version:pack.version});
 });
+
+app.use('/', function(req, res, next){
+    res.redirect('/chat'); //Temp redirect pre-login
+});
       
 
 // Connections
