@@ -119,7 +119,7 @@ chat.on('connection', function(conn) {
 
         if(rateLimit[conn.id] > 1)
             rateLimit[conn.id] = 1;
-        if(rateLimit[conn.id] < 1 && JSON.parse(message).type != 'delete' && JSON.parse(message).type != 'typing')
+        if(rateLimit[conn.id] < 1 && JSON.parse(message).type != 'delete' && JSON.parse(message).type != 'typing' && JSON.parse(message).type != 'ping')
             return conn.write(JSON.stringify({type:'server', info:'spam'}));
         else {
             try {

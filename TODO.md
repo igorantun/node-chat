@@ -4,7 +4,7 @@ This is a list of planned features/fixes for the [node-chat project](https://git
 (listed by priority)
 
 ## Features
-- 'Someone is writing...' feature
+- Option to create accounts
 - Ability to create/join other chat rooms (option to set password)
 
 ## Bug Fixes
