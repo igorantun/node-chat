@@ -142,7 +142,8 @@ chat.on('connection', function(conn) {
 
     conn.on('close', function() {
         consoleLog('socket', colors.underline(conn.id) + ': disconnected');
-        sendToAll({type:'server', info:'disconnection', user:users[clients[conn.id].id]})
+        sendToAll({type:'typing', typing:false, user:clients[conn.id].un});
+        sendToAll({type:'server', info:'disconnection', user:users[clients[conn.id].id]});
         delete users[clients[conn.id].id];
         delete clients[conn.id];
     });

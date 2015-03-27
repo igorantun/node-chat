@@ -4,18 +4,28 @@
     max-height: 300px;
 }
 
-#emoji, #sound, #desktop, #greentext{
+#emoji, #sound, #desktop, #greentext, #synthesis, #recognition {
     margin-left: 10px;
 }
 
-#icon {
-    font-size: 20px;
+#icon-settings, #icon-audio {
+    color: white;
+    top: -7px;
+    left: -3.5px;
+}
+
+#audio {
+    margin-right: 10px;
 }
 
 #typing {
     margin-left: 10px;
     font-style: italic;
     font-size: 9pt;
+}
+
+.mdi {
+    font-size: 20px;
 }
 
 .name {

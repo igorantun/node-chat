@@ -14,7 +14,7 @@ var user,
     typing = false,
     connected = false,
     version = VERSION,
-    blop = new Audio("sounds/blop.wav");
+    blop = new Audio('sounds/blop.wav');
 
 emojione.ascii = true;
 emojione.imageType = 'png';
@@ -22,6 +22,16 @@ emojione.unicodeAlt = false;
 document.getElementById('version').innerHTML = version;
 
 var regex = /(&zwj;|&nbsp;)/g;
+
+var settings = {
+    'name': null,
+    'emojis': true,
+    'greentext': true,
+    'sound': true,
+    'desktop': false,
+    'synthesis': false,
+    'recognition': false
+}
 
 
 // Connection
@@ -37,7 +47,11 @@ var connect = function() {
     };
 
     socket.onclose = function() {
+        clearTimeout(typeTimer);
         $('#admin').hide();
+        typing = false;
+        clients = [];
+
         if(connected) {
             updateBar('mdi-action-autorenew spin', 'Connection lost, reconnecting...', true);
 
@@ -46,7 +60,6 @@ var connect = function() {
                 connect();
             }, 1500);
         }
-        clients = [];
     };
 
     socket.onmessage = function(e) {
@@ -100,9 +113,11 @@ var connect = function() {
                     break;
 
                 case 'success':
-                    document.getElementById("send").childNodes[0].nodeValue = "Send";
+                    document.getElementById('send').childNodes[0].nodeValue = 'Send';
                     updateBar('mdi-content-send', 'Enter your message here', false);
                     connected = true;
+                    settings.name = username;
+                    localStorage.settings = JSON.stringify(settings);
                     break;
 
                 case 'update':
@@ -142,6 +157,11 @@ var connect = function() {
             if(data.message.indexOf('@' + username) > -1)
                 data.type = 'mention';
 
+            if(settings.synthesis) {
+                textToSpeech.text = data.message;
+                speechSynthesis.speak(textToSpeech);
+            }
+
             showChat(data.type, data.user, data.message, data.subtxt, data.mid);
         }
 
@@ -165,9 +185,9 @@ var connect = function() {
             if(!focus) {
                 unread++;
                 document.title = '(' + unread + ') Node.JS Chat';
-                if(document.getElementById('sound').checked)
+                if(settings.sound)
                     blop.play();
-                if(document.getElementById('desktop').checked)
+                if(settings.desktop)
                     desktopNotif(data.user + ': ' + data.message);
             }
         }
@@ -225,7 +245,7 @@ function showChat(type, user, message, subtxt, mid) {
     else
         $('#panel').append('<div  data-mid="' + mid + '" class="' + type + '""><span class="name ' + nameclass + '"><b><a class="namelink" href="javascript:void(0)">' + user + '</a></b></span><span class="timestamp">(' + subtxt + ') ' + getTime() + '</span><span class="msg">' + message + '</span></div>');
     
-    $('#panel').animate({scrollTop: $('#panel').prop("scrollHeight")}, 500);
+    $('#panel').animate({scrollTop: $('#panel').prop('scrollHeight')}, 500);
     updateStyle();
     nmr++;
 }
@@ -325,10 +345,10 @@ function getTime() {
  
     for(var i = 0; i < 3; i++) {
         if(time[i] < 10)
-            time[i] = "0" + time[i];
+            time[i] = '0' + time[i];
     }
  
-    return time.join(":");
+    return time.join(':');
 }
 
 function updateStyle() {
@@ -336,10 +356,10 @@ function updateStyle() {
     var element = document.getElementsByClassName('msg')[nmr];
 
     if(element.innerHTML != undefined) {
-        if(document.getElementById('greentext').checked && element.innerHTML.indexOf('&gt;') == 0)
+        if(settings.greentext && element.innerHTML.indexOf('&gt;') == 0)
             element.style.color = '#689f38';
 
-        if(document.getElementById('emoji').checked) {
+        if(settings.emoji) {
             var input = element.innerHTML;
             var output = emojione.shortnameToImage(element.innerHTML);
             element.innerHTML = output;
@@ -350,7 +370,7 @@ function updateStyle() {
 
 // Triggers
 $(document).ready(function() {
-    $('#user').bind("click", function() {
+    $('#user').bind('click', function() {
         var content = '',
             admin;
 
@@ -426,12 +446,51 @@ $(document).ready(function() {
         $('#options-dialog').modal('show');
     });
 
+    $('#audio').bind('click', function() {
+        speechToText.start();
+        updateBar('mdi-av-mic', 'Start speaking', true);
+    });
+
+    $('#emoji').bind('change', function() {
+        settings.emoji = document.getElementById('emoji').checked;
+        localStorage.settings = JSON.stringify(settings);
+    });
+
+    $('#greentext').bind('change', function() {
+        settings.greentext = document.getElementById('greentext').checked;
+        localStorage.settings = JSON.stringify(settings);
+    });
+
+    $('#sound').bind('change', function() {
+        settings.sound = document.getElementById('sound').checked;
+        localStorage.settings = JSON.stringify(settings);
+    });
+
+    $('#synthesis').bind('change', function() {
+        settings.synthesis = document.getElementById('synthesis').checked;
+        localStorage.settings = JSON.stringify(settings);
+    });
+
     $('#desktop').bind('change', function() {
-        if(Notification.permission !== "granted")
+        settings.desktop = document.getElementById('desktop').checked;
+        localStorage.settings = JSON.stringify(settings);
+
+        if(Notification.permission !== 'granted')
             Notification.requestPermission();
     });
 
-    $("#message").keypress(function(e) {
+    $('#recognition').bind('change', function() {
+        settings.recognition = document.getElementById('recognition').checked;
+        localStorage.settings = JSON.stringify(settings);
+
+        if(settings.recognition)
+            $('#audio').show();
+        else {
+            $('#audio').hide();
+        }
+    });
+
+    $('#message').keypress(function(e) {
         if(e.which == 13) {
             if(connected && typing) {
                 typing = false;
@@ -456,6 +515,44 @@ $(document).ready(function() {
 
 
 // Intern
+if(Notification) {
+    $('#toggle-desktop').show();
+}
+
+if('speechSynthesis' in window) {
+    $('#toggle-synthesis').show();
+    textToSpeech = new SpeechSynthesisUtterance();
+    textToSpeech.lang = 'en';
+}
+
+if('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
+    $('#toggle-recognition').show();
+    var speechToText = new webkitSpeechRecognition();
+    speechToText.interimResults = true;
+    speechToText.continuous = true;
+    speechToText.lang = 'en-US';
+}
+
+speechToText.onresult = function(event) {
+    $('#message').val('');
+
+    for (var i = event.resultIndex; i < event.results.length; ++i) {
+        if (event.results[i].isFinal) {
+            $('#message').val(event.results[i][0].transcript);
+            updateBar('mdi-content-send', 'Enter your message here', false);
+            speechToText.stop();
+            handleInput();
+        } else {
+            var oldval = $('#message').val();
+            $('#message').val(oldval + event.results[i][0].transcript);
+        }
+    }
+}
+
+speechToText.onerror = function(event) {
+    updateBar('mdi-content-send', 'Enter your message here', false);
+}
+
 function desktopNotif(message) {
     if(!Notification) 
         return;
@@ -466,8 +563,25 @@ function desktopNotif(message) {
     });
 }
 
+if(typeof(Storage) !== 'undefined') {
+    if(!localStorage.settings) {
+        localStorage.settings = JSON.stringify(settings);
+    } else {
+        settings = JSON.parse(localStorage.settings);
+        document.getElementById('emoji').checked = settings.emoji;
+        document.getElementById('greentext').checked = settings.greentext;
+        document.getElementById('sound').checked = settings.sound;
+        document.getElementById('desktop').checked = settings.desktop;
+        document.getElementById('synthesis').checked = settings.synthesis;
+        document.getElementById('recognition').checked = settings.recognition;
+
+        if(settings.recognition)
+            $('#audio').show();
+    }
+}
+
 window.onfocus = function() {
-    document.title = "Node.JS Chat";
+    document.title = 'Node.JS Chat';
     focus = true;
     unread = 0;
 };
