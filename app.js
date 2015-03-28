@@ -3,13 +3,23 @@ var favicon = require('serve-favicon');
 var readline = require('readline');
 var express = require('express');
 var colors = require('colors');
-var logger = require('./lib/logger/');
-var mysql = require('./lib/mysql/');
 var sockjs = require('sockjs');
 var https = require('https');
 var pack = require("./package.json");
 var path = require('path');
 var fs = require('fs');
+
+//Library Wrappers
+var logger = require('./lib/logger/');
+var mysql = require('./lib/mysql/');
+
+//Middleware
+var loginCheck = require('./middleware/loginCheck.js');
+
+//Routes
+var routes = require('./routes/index.js');
+
+//App
 var app = express();
 
 var config = {
@@ -60,6 +70,15 @@ if(config.readline) {
 app.use(logger.express);
 app.set('view engine', 'ejs');
 app.use(favicon(__dirname + '/public/img/favicon.png'));
+
+//Login Check
+app.use(loginCheck);
+/*
+Sets up res.locals.user object to be used.
+res.locals.user.logged_in contains boolean for logged_in user.
+*/
+
+//Routes
 app.use('/chat', express.static(__dirname + '/public'));
 app.get('/chat', function (req, res) {
     res.render('pages/index', {version:pack.version});
