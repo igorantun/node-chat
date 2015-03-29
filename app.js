@@ -10,6 +10,7 @@ var path = require('path');
 var fs = require('fs');
 
 //Library Wrappers
+var pack = require("./package.json");
 var logger = require('./lib/logger/');
 var mysql = require('./lib/mysql/');
 
@@ -21,11 +22,6 @@ var routes = require('./routes/index.js');
 
 //App
 var app = express();
-
-var logger = require('./lib/logger/');
-var pack = require("./package.json");
-var mysql = require('./lib/mysql/');
-
 
 // Variables
 var config = {
