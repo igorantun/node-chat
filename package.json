@@ -1,6 +1,6 @@
 {
   "name": "node-chat",
-  "version": "0.20.27",
+  "version": "0.20.28",
   "private": true,
   "scripts": {
     "start": "node app.js"
@@ -20,7 +20,6 @@
     "morgan": "~1.5.1",
     "mysql": "^2.6.0",
     "readline": "0.0.7",
-    "sequelize": "^2.0.5",
     "serve-favicon": "~2.2.0",
     "sockjs": "~0.3.15"
   }
