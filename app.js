@@ -1,11 +1,11 @@
-// Variables
+// Requires
 var favicon = require('serve-favicon');
+var s = require("underscore.string");
 var readline = require('readline');
 var express = require('express');
-var colors = require('colors');
 var sockjs = require('sockjs');
 var https = require('https');
-var pack = require("./package.json");
+var chalk = require('chalk');
 var path = require('path');
 var fs = require('fs');
 
@@ -22,6 +22,12 @@ var routes = require('./routes/index.js');
 //App
 var app = express();
 
+var logger = require('./lib/logger/');
+var pack = require("./package.json");
+var mysql = require('./lib/mysql/');
+
+
+// Variables
 var config = {
     log: true,
     readline: false, //This is breaking on some machines, also to be deprecated with express routes.
@@ -30,16 +36,29 @@ var config = {
     ssl: false
 };
 
-var styles = {
-    info:    colors.bold.blue,
-    error:   colors.bold.red.dim,
-    socket:  colors.bold.magenta,
-    stop:    colors.bold.red.dim,
-    start:   colors.bold.green.dim,
-    message: colors.bold.green.dim,
-    pm:      colors.bold.yellow.dim
-};
+var logInfo    = chalk.bold.blue('[Info] ');
+var logStop    = chalk.bold.red.dim('[Stop] ');
+var logPM      = chalk.bold.yellow.dim('[PM] ');
+var logError   = chalk.bold.red.dim('[Error] ');
+var logSocket  = chalk.bold.magenta('[Socket] ');
+var logStart   = chalk.bold.green.dim('[Start] ');
+var logMessage = chalk.bold.cyan.dim('[Message] ');
 
+var lastTime = [];
+var rateLimit = [];
+var currentTime = [];
+var rateInterval = [];
+
+var chat = sockjs.createServer();
+var clients = [];
+var users = {};
+var bans = [];
+var uid = 1;
+
+var alphanumeric = /^\w+$/;
+
+
+// Config
 if(config.ssl) {
     var options = {
         key: fs.readFileSync('/path/to/your/ssl.key'),
@@ -48,17 +67,6 @@ if(config.ssl) {
     server = https.createServer(options);
 }
 
-var chat = sockjs.createServer(),
-    clients = [],
-    users = {},
-    bans = [],
-    uid = 1;
-
-var alphanumeric = /^\w+$/,
-    escapeHtml = function(e,t,n,r){var i=0,s=0,o=false;if(typeof t==="undefined"||t===null){t=2}e=e.toString();if(r!==false){e=e.replace(/&/g,"&")}e=e.replace(/</g,"&lt;").replace(/>/g,"&gt;");var u={ENT_NOQUOTES:0,ENT_HTML_QUOTE_SINGLE:1,ENT_HTML_QUOTE_DOUBLE:2,ENT_COMPAT:2,ENT_QUOTES:3,ENT_IGNORE:4};if(t===0){o=true}if(typeof t!=="number"){t=[].concat(t);for(s=0;s<t.length;s++){if(u[t[s]]===0){o=true}else if(u[t[s]]){i=i|u[t[s]]}}t=i}if(t&u.ENT_HTML_QUOTE_SINGLE){e=e.replace(/'/g,"&#039;")}if(!o){e=e.replace(/"/g,"&#34;")}return e};
-
-
-// Config
 if(config.readline) {
     var rl = readline.createInterface(process.stdin, process.stdout);
     rl.setPrompt('[--:--:--][CONSOLE] ');
@@ -67,7 +75,7 @@ if(config.readline) {
 
 
 // Express
-app.use(logger.express);
+//app.use(logger.express);
 app.set('view engine', 'ejs');
 app.use(favicon(__dirname + '/public/img/favicon.png'));
 
@@ -94,16 +102,11 @@ var server = app.listen(config.port, config.ipadr, function() {
     var host = server.address().address,
         port = server.address().port;
 
-    consoleLog('start', 'Listening at http://' + host + ':' + port);
+    consoleLog(logStart, 'Listening at http://' + host + ':' + port);
 });
 
-var lastTime = [];
-var currentTime = [];
-var rateLimit = [];
-var rateInterval = [];
-
 chat.on('connection', function(conn) {
-    consoleLog('socket', colors.underline(conn.id) +': connected');
+    consoleLog(logSocket, chalk.underline(conn.id) +': connected');
     rateLimit[conn.id] = 1;
     lastTime[conn.id] = Date.now();
     currentTime[conn.id] = Date.now();
@@ -148,19 +151,19 @@ chat.on('connection', function(conn) {
                 if(data.type == 'typing') return sendToAll({type:'typing', typing:data.typing, user:clients[conn.id].un});
                 if(data.type == 'delete' && clients[conn.id].role > 0) sendToAll({type:'server', info:'delete', mid:data.message});
                 if(data.type == 'update') return updateUser(conn.id, data.user);
-                if(data.type == 'pm') consoleLog('message', '[PM] ' + colors.underline(clients[conn.id].un) + ' to ' + colors.underline(data.extra) + ': ' + data.message);
-                else //consoleLog('message', '[' + data.type.charAt(0).toUpperCase() + data.type.substring(1) + '] ' + colors.underline(clients[conn.id].un) + ': ' + data.message);
+                if(data.type == 'pm') consoleLog(logMessage, '[PM] ' + chalk.underline(clients[conn.id].un) + ' to ' + chalk.underline(data.extra) + ': ' + data.message);
+                else consoleLog(logMessage, '[' + data.type.charAt(0).toUpperCase() + data.type.substring(1) + '] ' + chalk.underline(clients[conn.id].un) + ': ' + data.message);
 
-                if(data.type != 'update') handleSocket(clients[conn.id], message);
+                handleSocket(clients[conn.id], message);
             } catch(err) {
-                return consoleLog('error', err);
+                return consoleLog(logError, err);
             }
             rateLimit[conn.id] -= 1;
         }
     });
 
     conn.on('close', function() {
-        consoleLog('socket', colors.underline(conn.id) + ': disconnected');
+        consoleLog(logSocket, chalk.underline(conn.id) + ': disconnected');
         sendToAll({type:'typing', typing:false, user:clients[conn.id].un});
         sendToAll({type:'server', info:'disconnection', user:users[clients[conn.id].id]});
         delete users[clients[conn.id].id];
@@ -245,8 +248,8 @@ function handleSocket(user, message) {
 
     data.id = user.id;
     data.user = user.un;
-    data.type = escapeHtml(data.type);
-    data.message = escapeHtml(data.message);
+    data.type = s.escapeHTML(data.type);
+    data.message = s.escapeHTML(data.message);
     data.mid = (Math.random() + 1).toString(36).substr(2, 5);
 
     switch(data.type) {
@@ -381,10 +384,10 @@ function consoleLog(type, message) {
         if(config.readline) {
             process.stdout.clearLine();
             process.stdout.cursorTo(0);
-            console.log('[' + getTime() + '][' + styles[type](type.toUpperCase()) + '] ' + message);
+            console.log('[' + getTime() + '] ' + type + message);
             rl.prompt(true);
         } else {
-            console.log('[' + getTime() + '][' + styles[type](type.toUpperCase()) + '] ' + message);
+            console.log('[' + getTime() + '] ' + type + message);
         }
     }
 }
@@ -410,7 +413,7 @@ function readLine() {
 
         rl.prompt();
     }).on('close', function() {
-        consoleLog('stop', 'Shutting down\n');
+        consoleLog(stop, 'Shutting down\n');
         process.exit(0);
     });
 }

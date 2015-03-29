@@ -8,7 +8,7 @@ var user,
     clients = [],
     usersTyping = [],
     nmr = 0,
-    dev = false,
+    dev = true,
     unread = 0,
     focus = true,
     typing = false,
@@ -25,7 +25,7 @@ var regex = /(&zwj;|&nbsp;)/g;
 
 var settings = {
     'name': null,
-    'emojis': true,
+    'emoji': true,
     'greentext': true,
     'sound': true,
     'desktop': false,
