@@ -1,4 +1,5 @@
-.idea/
 node_modules/
-config/
-logs/
+.idea/
+config/express.json
+config/mysql.json
+config/twitter.json
