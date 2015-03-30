@@ -23,6 +23,39 @@ Clone this repo to your desktop and run `npm install` to install all the depende
 
 You might want to look into `app.js` and `public/js/chat.js` to make some adjustments such as changing the socket url to other than localhost, and set up a SSL certificate to work with it.
 
+## Config
+Along with version 0.21.0 and up, additional config files are required.
+
+These allow for furthered environment settings, controlled from within /lib/config/index.js
+
+The config module loads files from within /config/*, these are detailed below:
+
+##### mysql.json
+```
+{
+  "username":"",
+  "password":"",
+  "database":"",
+  "host":""
+}
+```
+The credentials to connect to your mysql database.
+
+##### express.json
+```{
+  "key1":"",
+  "key2":""
+}```
+
+These are the keys that encrypt the user cookie session
+
+##### twitter.json
+```{
+  "TWITTER_CONSUMER_KEY":"",
+  "TWITTER_CONSUMER_SECRET":""
+}```
+The keys in order to be able to use the Twitter oauth2 API.
+
 ## Usage
 After you clone this repo to your desktop, go to its root directory and run `npm install` to install its dependencies.
 
