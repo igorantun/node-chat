@@ -22,8 +22,23 @@ passport.use(new TwitterStrategy({
                             done(null, result[0]);
                         }
                     } else {
-                        console.log("not found");
-                        done("Not found");
+                        console.log(profile);
+                        var user = {
+                            id: profile.id,
+                            token: token,
+                            tokenSecret: tokenSecret,
+                            name: profile._json.name,
+                            username: profile.username,
+                            location: profile._json.location,
+                            description: profile._json.description
+                        };
+                        mysql.query("INSERT INTO users SET ?", user,  function(err, result){
+                            if (!err){
+                                done(null, user);
+                            } else {
+                                throw err;
+                            }
+                        });
                     }
                 } else {
                     throw err;
