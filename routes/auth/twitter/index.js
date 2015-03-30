@@ -18,7 +18,6 @@ passport.use(new TwitterStrategy({
             mysql.query(q, function(err, result){
                 if (!err){
                     if (result.length > 0){
-                        console.log("found user");
                         if (result[0].tokenSecret === tokenSecret){
                             done(null, result[0]);
                         }
