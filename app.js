@@ -1,18 +1,18 @@
 // Requires
 var favicon = require('serve-favicon');
 var s = require("underscore.string");
+var session = require('cookie-session');
 var readline = require('readline');
+var passport = require("passport");
 var express = require('express');
 var sockjs = require('sockjs');
 var https = require('https');
 var chalk = require('chalk');
-var path = require('path');
 var fs = require('fs');
 
 //Library Wrappers
-var pack = require("./package.json");
+var config = require('./lib/config/');
 var logger = require('./lib/logger/');
-var mysql = require('./lib/mysql/');
 
 //Middleware
 var loginCheck = require('./middleware/loginCheck.js');
@@ -24,13 +24,11 @@ var routes = require('./routes/index.js');
 var app = express();
 
 // Variables
-var config = {
-    log: true,
-    readline: false, //This is breaking on some machines, also to be deprecated with express routes.
-    ipadr: '127.0.0.1' || 'localhost',
-    port: 3000,
-    ssl: false
-};
+config.log = true;
+config.readline = false; //This is breaking on some machines, also to be deprecated with express routes.
+config.ipadr = '127.0.0.1' || 'localhost';
+config.port = 3000;
+config.ssl = false;
 
 var logInfo    = chalk.bold.blue('[Info] ');
 var logStop    = chalk.bold.red.dim('[Stop] ');
@@ -71,26 +69,19 @@ if(config.readline) {
 
 
 // Express
-//app.use(logger.express);
+app.set('trust proxy', 1);
+app.use(session({keys: [config.express.key1, config.express.key2]}));
+app.use(passport.initialize());
+app.use(logger.express);
 app.set('view engine', 'ejs');
 app.use(favicon(__dirname + '/public/img/favicon.png'));
+app.use(express.static(__dirname + '/public'));
 
 //Login Check
 app.use(loginCheck);
-/*
-Sets up res.locals.user object to be used.
-res.locals.user.logged_in contains boolean for logged_in user.
-*/
 
 //Routes
-app.use('/chat', express.static(__dirname + '/public'));
-app.get('/chat', function (req, res) {
-    res.render('pages/index', {version:pack.version});
-});
-
-app.use('/', function(req, res, next){
-    res.redirect('/chat'); //Temp redirect pre-login
-});
+app.use(routes);
       
 
 // Connections
