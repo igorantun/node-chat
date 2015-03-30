@@ -30,7 +30,7 @@ These allow for furthered environment settings, controlled from within /lib/conf
 
 The config module loads files from within /config/*, these are detailed below:
 
-##### mysql.json
+##### config/mysql.json
 ```
 {
   "username":"",
@@ -41,20 +41,22 @@ The config module loads files from within /config/*, these are detailed below:
 ```
 The credentials to connect to your mysql database.
 
-##### express.json
+##### config/express.json
 ```{
   "key1":"",
   "key2":""
 }```
 
-These are the keys that encrypt the user cookie session
+These are the keys that encrypt the user cookie session, they should be completely random, and not shared.
 
-##### twitter.json
+##### config/twitter.json
 ```{
   "TWITTER_CONSUMER_KEY":"",
   "TWITTER_CONSUMER_SECRET":""
 }```
+
 The keys in order to be able to use the Twitter oauth2 API.
+You can get new keys here: https://apps.twitter.com/
 
 ## Usage
 After you clone this repo to your desktop, go to its root directory and run `npm install` to install its dependencies.
