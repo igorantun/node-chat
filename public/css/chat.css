@@ -1,7 +1,13 @@
 #panel {
-    height: 300px;
+    height: 45vh;
     overflow: auto;
-    max-height: 300px;
+    max-height: 45vh;
+}
+
+#users-panel {
+    height: 55vh;
+    overflow: auto;
+    max-height: 55vh;
 }
 
 #emoji, #sound, #desktop, #greentext, #synthesis, #recognition {

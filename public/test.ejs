@@ -11,12 +11,16 @@
 
     <title>Node.JS Chat- Login</title>
 
-    <link href="/css/bootstrap.min.css" rel="stylesheet">
-    <link href="/css/ripples.css" rel="stylesheet">
-    <link href="/css/material-wfont.min.css" rel="stylesheet">
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/chat.css" rel="stylesheet">
+    <link href="css/ripples.css" rel="stylesheet">
+    <link href="css/material-wfont.min.css" rel="stylesheet">
 
     <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
+    <link href="//cdn.jsdelivr.net/emojione/1.3.0/assets/css/emojione.min.css" rel="stylesheet" type="text/css"/>
     <link href="https://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet" type="text/css">
+    <style>.fa{margin-right: 10px}</style>
 </head>
 
 <body>
@@ -24,8 +28,7 @@
         <a target="_blank" href="https://github.com/IgorAntun/node-chat"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a>
 
         <div class="row">
-            <div class="col-xs-12 col-md-8 col-md-offset-2"><br>
-            	<div class="hidden-xs"><br><br><br><br><br><br><br><br></div>
+            <div class="col-xs-12 col-lg-10 col-lg-offset-1"><br>
                 <div class="well page active">
                     <nav class="navbar shadow-z-2">
                         <div class="container-fluid">
@@ -35,7 +38,7 @@
                                     <span class="icon-bar"></span>
                                     <span class="icon-bar"></span>
                                 </button>
-                                <a class="navbar-brand" href="#">Node.JS Chat</a>
+                                <a class="navbar-brand" href="#">Node.JS Chat <span id="version" style="font-size:7pt"></span></a>
                             </div>
 
                             <div class="collapse navbar-collapse" id="collapser">
@@ -47,44 +50,42 @@
                     </nav>
 
                     <div class="row">
-                        <div class="col-xs-12">
+                        <div class="col-xs-12 col-md-12 ">
                             <div class="well">
-                                <h2>Sign in</h2>
+                                <div class="row">
+                                    <div class="col-xs-6">
+                                        <h2>Sign in</h2>
+                                    </div>
+                                </div>
                                 <br>
                                 <div class="row">
                                     <div class="col-xs-3 col-xs-offset-3">
                                         <br>
                                         <div align="right">
                                         <div class="form-group">
-                                                <input type="email" class="form-control" id="email" placeholder="Email" disabled>
+                                                <input type="email" class="form-control" id="email" placeholder="Email">
                                         </div>
                                         <div class="form-group">
-                                                <input type="password" class="form-control" id="password" placeholder="Password" disabled>
+                                                <input type="password" class="form-control" id="password" placeholder="Password">
                                         </div>
                                         <div class="form-group">
-                                            <button id="email" class="btn btn-material-grey" disabled>
-                                                <i class="fa fa-envelope-o" style="margin-right: 10px"></i> Sign in with Email
+                                            <button id="email" class="btn btn-material-grey">
+                                                <i class="fa fa-envelope-o"></i> Sign in with Email
                                             </button>
                                         </div>
                                         </div>
                                     </div>
 
                                     <div class="col-xs-6">
-                                        <form action="/auth/facebook">
-	                                        <button id="facebook" class="btn btn-material-indigo" disabled>
-	                                            <i class="fa fa-facebook" style="margin-right: 10px"></i> Sign in with Facebook
-	                                        </button>
-                                        </form>
-                                        <form action="/auth/twitter">
-	                                        <button id="twitter" class="btn btn-material-cyan">
-	                                            <i class="fa fa-twitter" style="margin-right: 10px"></i>Sign in with Twitter
-	                                        </button>
-                                        </form>
-                                        <form action="/auth/google">
-	                                        <button id="google" class="btn btn-material-deep-orange" disabled>
-	                                            <i class="fa fa-google" style="margin-right: 10px"></i> Sign in with Google
-	                                        </button>
-                                        </form>
+                                        <button id="facebook" class="btn btn-material-indigo">
+                                            <i class="fa fa-facebook"></i> Sign in with Facebook
+                                        </button><br>
+                                        <button id="twitter" class="btn btn-material-cyan">
+                                            <i class="fa fa-twitter"></i> Sign in with Twitter
+                                        </button><br>
+                                        <button id="google" class="btn btn-material-deep-orange">
+                                            <i class="fa fa-google"></i> Sign in with Google
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -103,11 +104,19 @@
         </div>
     </div>
 
+    <script>
+        var VERSION="<%= version%>";
+    </script>
+
+    <script src="//lorenzoongithub.github.io/completely/complete.ly.1.0.1.min.js"></script>
     <script src="//code.jquery.com/jquery-2.1.3.min.js"></script>
+    <script src="//cdn.jsdelivr.net/emojione/1.3.0/lib/js/emojione.min.js"></script>
     <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
-    <script src="/js/jquery.easing.min.js"></script>
-    <script src="/js/ripples.min.js"></script>
-    <script src="/js/material.min.js"></script>
+    <script src="js/jquery.easing.min.js"></script>
+    <script src="js/jquery.linkify.min.js"></script>
+    <script src="js/ripples.min.js"></script>
+    <script src="js/material.min.js"></script>
+    <script src="js/chat.js"></script>
 
     <script>
         $(document).ready(function() {
