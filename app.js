@@ -1,9 +1,10 @@
 // Requires
+var session = require('cookie-session');
 var favicon = require('serve-favicon');
 var s = require("underscore.string");
-var session = require('cookie-session');
 var readline = require('readline');
 var passport = require("passport");
+var jwt = require("jsonwebtoken");
 var express = require('express');
 var sockjs = require('sockjs');
 var https = require('https');
@@ -92,7 +93,10 @@ var server = app.listen(config.port, config.ipadr, function() {
     consoleLog(logStart, 'Listening at http://' + host + ':' + port);
 });
 
+var util = require('util');
+
 chat.on('connection', function(conn) {
+    //console.log(util.inspect(conn));
     consoleLog(logSocket, chalk.underline(conn.id) +': connected');
     rateLimit[conn.id] = 1;
     lastTime[conn.id] = Date.now();
@@ -158,7 +162,10 @@ chat.on('connection', function(conn) {
     });
 });
 
-chat.installHandlers(server, {prefix:'/socket',log:function(){}});
+chat.installHandlers(server, {
+    prefix:'/socket',
+    log:function(){}
+});
 
 
 // Util

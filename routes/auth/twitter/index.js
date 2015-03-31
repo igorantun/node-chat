@@ -47,6 +47,8 @@ passport.use(new TwitterStrategy({
         })
 );
 
+var jwt = require("jsonwebtoken");
+
 router.get('/', passport.authenticate('twitter'));
 router.get('/callback',
     passport.authenticate('twitter', {
@@ -54,7 +56,13 @@ router.get('/callback',
     }),
     function(req, res) {
         req.session.user = req.user;
-        console.log(req.session.user);
+        var user = req.user;
+        req.session.token = jwt.sign({
+            foo: true,
+            user: {id: user.id, username: user.username, type:"twitter"},
+            date: new Date()
+        }, config.jwt.salt);
+        res.cookie('jwt', req.session.token, {httpOnly: true });
         res.redirect("/chat");
     }
 );

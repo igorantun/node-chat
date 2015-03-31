@@ -55,6 +55,14 @@ These are the keys that encrypt the user cookie session, they should be complete
   "TWITTER_CONSUMER_SECRET":""
 }```
 
+##### config/salt.json
+```{
+  "salt":"random_string"
+}```
+
+Salt to encrypt the json web token.
+
+
 The keys in order to be able to use the Twitter oauth2 API.
 You can get new keys here: https://apps.twitter.com/
 
