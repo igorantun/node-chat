@@ -112,7 +112,8 @@ chat.on('connection', function(conn) {
         un: null,
         ip: conn.headers['x-forwarded-for'],
         role: 0,
-        con: conn
+        con: conn,
+        warn : 0
     };
 
     users[uid] = {
@@ -137,9 +138,22 @@ chat.on('connection', function(conn) {
 
         if(rateLimit[conn.id] > 1)
             rateLimit[conn.id] = 1;
-        if(rateLimit[conn.id] < 1 && JSON.parse(message).type != 'delete' && JSON.parse(message).type != 'typing' && JSON.parse(message).type != 'ping')
-            return conn.write(JSON.stringify({type:'server', info:'spam'}));
-        else {
+        if(rateLimit[conn.id] < 1 && JSON.parse(message).type != 'delete' && JSON.parse(message).type != 'typing' && JSON.parse(message).type != 'ping') {
+            clients[conn.id].warn++;
+
+            if(clients[conn.id].warn < 6) {
+                return conn.write(JSON.stringify({type:'server', info:'spam', warn:clients[conn.id].warn}));
+            } else {
+                bans.push(clients[conn.id].ip);
+                sendToAll({type:'ban', extra:clients[conn.id].un, message:'Server banned ' + clients[conn.id].un + ' from the server for 5 minutes for spamming the servers'});
+
+                setTimeout(function() {
+                    bans.splice(bans.indexOf(clients[conn.id].ip))
+                }, 5 * 1000 * 60);
+
+                return conn.close();
+            }
+        } else {
             try {
                 var data = JSON.parse(message);
 
@@ -147,6 +161,12 @@ chat.on('connection', function(conn) {
                 if(data.type == 'typing') return sendToAll({type:'typing', typing:data.typing, user:clients[conn.id].un});
                 if(data.type == 'delete' && clients[conn.id].role > 0) sendToAll({type:'server', info:'delete', mid:data.message});
                 if(data.type == 'update') return updateUser(conn.id, data.user);
+
+                if(data.message.length > 768) {
+                    data.message = data.message.substring(0, 768);
+                    message = JSON.stringify(data);
+                }
+
                 if(data.type == 'pm') consoleLog(logMessage, '[PM] ' + chalk.underline(clients[conn.id].un) + ' to ' + chalk.underline(data.extra) + ': ' + data.message);
                 else consoleLog(logMessage, '[' + data.type.charAt(0).toUpperCase() + data.type.substring(1) + '] ' + chalk.underline(clients[conn.id].un) + ': ' + data.message);
 

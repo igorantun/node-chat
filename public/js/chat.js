@@ -139,7 +139,7 @@ var connect = function() {
                     break;
 
                 case 'spam':
-                    showChat('light', null, 'You have to wait 1 second between messages');
+                    showChat('global', null, 'You have to wait 1 second between messages. Continuing on spamming the servers may get you banned. Warning ' + data.warn + ' of 5');
                     break;
 
                 case 'clients':
@@ -152,7 +152,7 @@ var connect = function() {
                     break;
             }
         } else if((data.type == 'kick' || data.type == 'ban') && data.extra == username) {
-            location.reload()
+            location.reload();
         } else {
             if(data.message.indexOf('@' + username) > -1)
                 data.type = 'mention';
