@@ -101,7 +101,7 @@ var connect = function() {
                     if(data.reason == 'length') message = 'Your username must have at least 3 characters and no more than 16 characters';
                     if(data.reason == 'format') message = 'Your username must only contain alphanumeric characters (numbers, letters and underscores)';
                     if(data.reason == 'taken') message = 'This username is already taken';
-                    if(data.reason == 'banned') message = 'You have been banned from the server. You have to wait until you get unbanned to be able to connect again';
+                    if(data.reason == 'banned') message = 'You have been banned from the server for ' + data.time / 60 / 1000 + ' minutes. You have to wait until you get unbanned to be able to connect again';
                     showChat('light', null, message);
 
                     if(!data.keep) {

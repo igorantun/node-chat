@@ -123,9 +123,15 @@ chat.on('connection', function(conn) {
         role: 0
     };
     
-    if(bans.indexOf(clients[conn.id].ip) > -1) {
-        conn.write(JSON.stringify({type:'server', info:'rejected', reason:'banned'}));
-        conn.close();
+    for(i in bans) {
+        if(bans[i][0] == clients[conn.id.ip]) {
+            if(Date.now() - bans[i][1] < bans[i][2]) {
+                conn.write(JSON.stringify({type:'server', info:'rejected', reason:'banned', time:bans[i][2]}));
+                return conn.close();
+            } else {
+                bans.splice(i);
+            }
+        }
     }
 
     conn.write(JSON.stringify({type:'server', info:'clients', clients:users}));
@@ -144,12 +150,8 @@ chat.on('connection', function(conn) {
             if(clients[conn.id].warn < 6) {
                 return conn.write(JSON.stringify({type:'server', info:'spam', warn:clients[conn.id].warn}));
             } else {
-                bans.push(clients[conn.id].ip);
+                bans.push([clients[conn.id].ip, Date.now(), 5 * 1000 * 60]);
                 sendToAll({type:'ban', extra:clients[conn.id].un, message:'Server banned ' + clients[conn.id].un + ' from the server for 5 minutes for spamming the servers'});
-
-                setTimeout(function() {
-                    bans.splice(bans.indexOf(clients[conn.id].ip))
-                }, 5 * 1000 * 60);
 
                 return conn.close();
             }
@@ -304,15 +306,11 @@ function handleSocket(user, message) {
                                         if(user.role > 1 && getUserByName(data.message).role == 0) {
                                             for(var client in clients) {
                                                 if(clients[client].un == data.message)
-                                                    bans.push(clients[client].ip);
+                                                    bans.push([clients[client].ip, Date.now(), time * 1000 * 60]);
                                             }
+
                                             data.extra = data.message;
                                             data.message = data.user + ' banned ' + data.message + ' from the server for ' + time + ' minutes';
-
-                                            setTimeout(function() {
-                                                bans.splice(bans.indexOf(clients[user.con.id].ip))
-                                            }, time * 1000 * 60);
-
                                             return sendToAll(data);
                                         } else {
                                             data.message = 'You don\'t have permission to do that';
