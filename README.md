@@ -10,6 +10,8 @@ This is a node.js chat application powered by SockJS and Express that provides t
 You can test a fully working live demo at http://igorantun.com/chat
 - Type `/help` to get a list of the available chat commands
 
+---
+
 ## Features
 - Emoji support
 - User @mentioning
@@ -18,17 +20,26 @@ You can test a fully working live demo at http://igorantun.com/chat
 - Ability to kick/ban users (for admins)
 - [Other awesome features yet to be implemented](https://github.com/IgorAntun/node-chat/blob/master/TODO.md)
 
-#### User Features
+.
 ![User Features](http://i.imgur.com/WbF1fi2.png)
 
-#### Admin Features
+.
 ![Admin Features](http://i.imgur.com/xQFaadt.png)
 
+
+####There are 3 admin levels:
+- **Helper:** Can delete chat messages
+- **Moderator:** The above plus the ability to kick and ban users
+- **Administrator:** All the above plus send global alerts and promote/demote other users
+
+---
 
 ## Setup
 Clone this repo to your desktop and run `npm install` to install all the dependencies.
 
 You might want to look into `app.js` and `public/js/chat.js` to make some adjustments such as changing the socket url to other than localhost, and set up a SSL certificate to work with it.
+
+---
 
 ## Usage
 After you clone this repo to your desktop, go to its root directory and run `npm install` to install its dependencies.
