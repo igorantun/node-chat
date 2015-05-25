@@ -18,6 +18,13 @@ You can test a fully working live demo at http://igorantun.com/chat
 - Ability to kick/ban users (for admins)
 - [Other awesome features yet to be implemented](https://github.com/IgorAntun/node-chat/blob/master/TODO.md)
 
+#### User Features
+![User Features](http://i.imgur.com/WbF1fi2.png)
+
+#### Admin Features
+![Admin Features](http://i.imgur.com/xQFaadt.png)
+
+
 ## Setup
 Clone this repo to your desktop and run `npm install` to install all the dependencies.
 

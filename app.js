@@ -124,7 +124,7 @@ chat.on('connection', function(conn) {
     };
     
     for(i in bans) {
-        if(bans[i][0] == clients[conn.id.ip]) {
+        if(bans[i][0] == clients[conn.id].ip) {
             if(Date.now() - bans[i][1] < bans[i][2]) {
                 conn.write(JSON.stringify({type:'server', info:'rejected', reason:'banned', time:bans[i][2]}));
                 return conn.close();
