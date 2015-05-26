@@ -31,12 +31,11 @@ var settings = {
     'desktop': false,
     'synthesis': false,
     'recognition': false
-}
-
+};
 
 // Connection
 var connect = function() {
-    socket = new WebSocket('ws://localhost:3000/socket/websocket');
+    socket = new WebSocket('ws://'+ window.location.host +'/socket/websocket');
 
     socket.onopen = function() {
         var ping = setInterval(function(){

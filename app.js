@@ -1,24 +1,13 @@
 // Requires
 var favicon = require('serve-favicon');
+var pack = require("./package.json");
 var s = require("underscore.string");
 var readline = require('readline');
 var express = require('express');
 var sockjs = require('sockjs');
 var https = require('https');
 var chalk = require('chalk');
-var path = require('path');
 var fs = require('fs');
-
-//Library Wrappers
-var pack = require("./package.json");
-var logger = require('./lib/logger/');
-var mysql = require('./lib/mysql/');
-
-//Middleware
-var loginCheck = require('./middleware/loginCheck.js');
-
-//Routes
-var routes = require('./routes/index.js');
 
 //App
 var app = express();
@@ -27,10 +16,16 @@ var app = express();
 var config = {
     log: true,
     readline: false, //This is breaking on some machines, also to be deprecated with express routes.
-    ipadr: '127.0.0.1',
-    port: 3000,
     ssl: false
 };
+
+// Config
+if(config.ssl) {
+    config.key = fs.readFileSync('/path/to/your/ssl.key');
+    config.cert = fs.readFileSync('/path/to/your/ssl.crt')
+}
+
+var port = normalizePort(process.env.PORT || '3000');
 
 var logInfo    = chalk.bold.blue('[Info] ');
 var logStop    = chalk.bold.red.dim('[Stop] ');
@@ -53,16 +48,6 @@ var uid = 1;
 
 var alphanumeric = /^\w+$/;
 
-
-// Config
-if(config.ssl) {
-    var options = {
-        key: fs.readFileSync('/path/to/your/ssl.key'),
-        cert: fs.readFileSync('/path/to/your/ssl.crt')
-    },
-    server = https.createServer(options);
-}
-
 if(config.readline) {
     var rl = readline.createInterface(process.stdin, process.stdout);
     rl.setPrompt('[--:--:--][CONSOLE] ');
@@ -71,35 +56,21 @@ if(config.readline) {
 
 
 // Express
-//app.use(logger.express);
+app.set('port', port);
 app.set('view engine', 'ejs');
 app.use(favicon(__dirname + '/public/img/favicon.png'));
-
-//Login Check
-app.use(loginCheck);
-/*
-Sets up res.locals.user object to be used.
-res.locals.user.logged_in contains boolean for logged_in user.
-*/
+app.locals.version = pack.version;
 
 //Routes
 app.use('/chat', express.static(__dirname + '/public'));
 app.get('/chat', function (req, res) {
-    res.render('pages/index', {version:pack.version});
+    res.render('index', {version:pack.version});
 });
 
 app.use('/', function(req, res, next){
     res.redirect('/chat'); //Temp redirect pre-login
 });
-      
 
-// Connections
-var server = app.listen(config.port, config.ipadr, function() {
-    var host = server.address().address,
-        port = server.address().port;
-
-    consoleLog(logStart, 'Listening at http://' + host + ':' + port);
-});
 
 chat.on('connection', function(conn) {
     consoleLog(logSocket, chalk.underline(conn.id) +': connected');
@@ -188,9 +159,6 @@ chat.on('connection', function(conn) {
         delete clients[conn.id];
     });
 });
-
-chat.installHandlers(server, {prefix:'/socket',log:function(){}});
-
 
 // Util
 function updateUser(id, name) {
@@ -431,3 +399,71 @@ function readLine() {
         process.exit(0);
     });
 }
+
+var server;
+
+if (!config.ssl){
+    var http = require('http');
+    server = http.createServer(app);
+} else {
+    var https = require('https');
+    var opt = {
+        key: config.key,
+        cert: config.cert
+    };
+    server = https.createServer(opt, app);
+}
+
+server.listen(port);
+server.on('error', onError);
+server.on('listening', onListening);
+
+function normalizePort(val) {
+    var port = parseInt(val, 10);
+
+    if (isNaN(port)) {
+        // named pipe
+        return val;
+    }
+
+    if (port >= 0) {
+        // port number
+        return port;
+    }
+
+    return false;
+}
+
+function onError(error) {
+    if (error.syscall !== 'listen') {
+        throw error;
+    }
+
+    var bind = typeof port === 'string'
+        ? 'Pipe ' + port
+        : 'Port ' + port;
+
+    // handle specific listen errors with friendly messages
+    switch (error.code) {
+        case 'EACCES':
+            console.error(bind + ' requires elevated privileges');
+            process.exit(1);
+            break;
+        case 'EADDRINUSE':
+            console.error(bind + ' is already in use');
+            process.exit(1);
+            break;
+        default:
+            throw error;
+    }
+}
+
+function onListening() {
+    var addr = server.address();
+    var bind = typeof addr === 'string'
+        ? 'pipe ' + addr
+        : 'port ' + addr.port;
+    consoleLog(logStart, 'Listening at '+bind);
+}
+
+chat.installHandlers(server, {prefix:'/socket',log:function(){}});
