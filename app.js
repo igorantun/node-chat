@@ -302,7 +302,8 @@ function handleSocket(user, message) {
                                             if(data.role == 1) role = 'Helper';
                                             if(data.role == 2) role = 'Moderator';
                                             if(data.role == 3) role = 'Administrator';
-                                            data.message = data.user + ' set ' + data.message + ' role to ' + role;
+                                            data.message = data.user + ' set ' + data.message + '\'s role to ' + role;
+
                                             sendToOne(data, JSON.parse(message).message, 'role');
                                             sendToAll({type:'server', info:'clients', clients:users});
                                         } else {
@@ -402,7 +403,7 @@ function readLine() {
 
 var server;
 
-if (!config.ssl){
+if(!config.ssl) {
     var http = require('http');
     server = http.createServer(app);
 } else {
@@ -411,6 +412,7 @@ if (!config.ssl){
         key: config.key,
         cert: config.cert
     };
+
     server = https.createServer(opt, app);
 }
 
@@ -421,13 +423,11 @@ server.on('listening', onListening);
 function normalizePort(val) {
     var port = parseInt(val, 10);
 
-    if (isNaN(port)) {
-        // named pipe
+    if(isNaN(port)) {
         return val;
     }
 
-    if (port >= 0) {
-        // port number
+    if(port >= 0) {
         return port;
     }
 
@@ -435,24 +435,23 @@ function normalizePort(val) {
 }
 
 function onError(error) {
-    if (error.syscall !== 'listen') {
+    if(error.syscall !== 'listen') {
         throw error;
     }
 
-    var bind = typeof port === 'string'
-        ? 'Pipe ' + port
-        : 'Port ' + port;
+    var bind = typeof port === 'string' ? 'Pipe ' + port : 'Port ' + port;
 
-    // handle specific listen errors with friendly messages
     switch (error.code) {
         case 'EACCES':
             console.error(bind + ' requires elevated privileges');
             process.exit(1);
             break;
+
         case 'EADDRINUSE':
             console.error(bind + ' is already in use');
             process.exit(1);
             break;
+
         default:
             throw error;
     }
@@ -466,4 +465,4 @@ function onListening() {
     consoleLog(logStart, 'Listening at '+bind);
 }
 
-chat.installHandlers(server, {prefix:'/socket',log:function(){}});
+chat.installHandlers(server, {prefix:'/socket', log:function(){}});
