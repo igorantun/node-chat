@@ -48,3 +48,9 @@ Once the dependencies are installed, you can run  `node main.js` to start the ap
 
 To give yourself administrator permissions on the chat, you will have to type `/op [your-name]` in the app console.
 
+---
+
+## License
+>You can check out the full license [here](https://github.com/IgorAntun/node-chat/blob/master/LICENSE.md)
+
+This project is licensed under the terms of the **MIT** license.
