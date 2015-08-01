@@ -9,24 +9,18 @@ var https = require('https');
 var chalk = require('chalk');
 var fs = require('fs');
 
+var config = require('./config.json');
+
+
 //App
 var app = express();
 
-// Variables
-var config = {
-    log: true,
-    readline: false, //This is breaking on some machines, also to be deprecated with express routes.
-    ssl: false
-};
 
 // Config
-if(config.ssl) {
-    config.key = fs.readFileSync('/path/to/your/ssl.key');
-    config.cert = fs.readFileSync('/path/to/your/ssl.crt')
-}
+var port = normalizePort(process.env.PORT || config.port);
 
-var port = normalizePort(process.env.PORT || '3000');
 
+// Variables
 var logInfo    = chalk.bold.blue('[Info] ');
 var logStop    = chalk.bold.red.dim('[Stop] ');
 var logPM      = chalk.bold.yellow.dim('[PM] ');
@@ -61,16 +55,12 @@ app.set('view engine', 'ejs');
 app.use(favicon(__dirname + '/public/img/favicon.png'));
 app.locals.version = pack.version;
 
+
 //Routes
 app.use('/chat', express.static(__dirname + '/public'));
 app.get('/chat', function (req, res) {
     res.render('index', {version:pack.version});
 });
-
-app.use('/', function(req, res, next){
-    res.redirect('/chat'); //Temp redirect pre-login
-});
-
 
 chat.on('connection', function(conn) {
     consoleLog(logSocket, chalk.underline(conn.id) +': connected');
@@ -195,8 +185,9 @@ function updateUser(id, name) {
 }
 
 function sendToAll(data) {
-    for(var client in clients)
+    for(var client in clients) {
         clients[client].con.write(JSON.stringify(data));
+    }
 }
 
 function sendToOne(data, user, type) {
@@ -403,14 +394,14 @@ function readLine() {
 
 var server;
 
-if(!config.ssl) {
+if(!config.ssl.use) {
     var http = require('http');
     server = http.createServer(app);
 } else {
     var https = require('https');
     var opt = {
-        key: config.key,
-        cert: config.cert
+        key: fs.readFileSync(config.ssl.key),
+        cert: fs.readFileSync(config.ssl.crt)
     };
 
     server = https.createServer(opt, app);
@@ -462,7 +453,7 @@ function onListening() {
     var bind = typeof addr === 'string'
         ? 'pipe ' + addr
         : 'port ' + addr.port;
-    consoleLog(logStart, 'Listening at '+bind);
+    consoleLog(logStart, 'Listening at ' + bind);
 }
 
 chat.installHandlers(server, {prefix:'/socket', log:function(){}});
