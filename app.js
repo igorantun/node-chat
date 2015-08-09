@@ -1,7 +1,6 @@
-// Requires
+/* Requires */
 var favicon = require('serve-favicon');
-var pack = require("./package.json");
-var s = require("underscore.string");
+var s = require('underscore.string');
 var readline = require('readline');
 var express = require('express');
 var sockjs = require('sockjs');
@@ -9,26 +8,19 @@ var https = require('https');
 var chalk = require('chalk');
 var fs = require('fs');
 
+var log = require('./lib/log.js');
+var utils = require('./lib/utils.js');
 var config = require('./config.json');
+var pack = require('./package.json');
 
 
-//App
+/* Config */
+var port = utils.normalizePort(process.env.PORT || config.port);
 var app = express();
+var server;
 
 
-// Config
-var port = normalizePort(process.env.PORT || config.port);
-
-
-// Variables
-var logInfo    = chalk.bold.blue('[Info] ');
-var logStop    = chalk.bold.red.dim('[Stop] ');
-var logPM      = chalk.bold.yellow.dim('[PM] ');
-var logError   = chalk.bold.red.dim('[Error] ');
-var logSocket  = chalk.bold.magenta('[Socket] ');
-var logStart   = chalk.bold.green.dim('[Start] ');
-var logMessage = chalk.bold.cyan.dim('[Message] ');
-
+/* Variables */
 var lastTime = [];
 var rateLimit = [];
 var currentTime = [];
@@ -42,28 +34,30 @@ var uid = 1;
 
 var alphanumeric = /^\w+$/;
 
-if(config.readline) {
+if(config.readline.use) {
     var rl = readline.createInterface(process.stdin, process.stdout);
-    rl.setPrompt('[--:--:--][CONSOLE] ');
+    rl.setPrompt(config.readline.prompt);
     rl.prompt();
 }
 
 
-// Express
+/* Express */
 app.set('port', port);
 app.set('view engine', 'ejs');
 app.use(favicon(__dirname + '/public/img/favicon.png'));
 app.locals.version = pack.version;
 
 
-//Routes
+/* Routes */
 app.use('/chat', express.static(__dirname + '/public'));
 app.get('/chat', function (req, res) {
     res.render('index', {version:pack.version});
 });
 
+
+/* Logic */
 chat.on('connection', function(conn) {
-    consoleLog(logSocket, chalk.underline(conn.id) +': connected');
+    log('socket', chalk.underline(conn.id) +': connected');
     rateLimit[conn.id] = 1;
     lastTime[conn.id] = Date.now();
     currentTime[conn.id] = Date.now();
@@ -103,8 +97,10 @@ chat.on('connection', function(conn) {
         lastTime[conn.id] = currentTime[conn.id];
         rateLimit[conn.id] += rateInterval[conn.id];
 
-        if(rateLimit[conn.id] > 1)
+        if(rateLimit[conn.id] > 1) {
             rateLimit[conn.id] = 1;
+        }
+
         if(rateLimit[conn.id] < 1 && JSON.parse(message).type != 'delete' && JSON.parse(message).type != 'typing' && JSON.parse(message).type != 'ping') {
             clients[conn.id].warn++;
 
@@ -112,7 +108,7 @@ chat.on('connection', function(conn) {
                 return conn.write(JSON.stringify({type:'server', info:'spam', warn:clients[conn.id].warn}));
             } else {
                 bans.push([clients[conn.id].ip, Date.now(), 5 * 1000 * 60]);
-                sendToAll({type:'ban', extra:clients[conn.id].un, message:'Server banned ' + clients[conn.id].un + ' from the server for 5 minutes for spamming the servers'});
+                utils.sendToAll({type:'ban', extra:clients[conn.id].un, message:'Server banned ' + clients[conn.id].un + ' from the server for 5 minutes for spamming the servers'});
 
                 return conn.close();
             }
@@ -121,8 +117,8 @@ chat.on('connection', function(conn) {
                 var data = JSON.parse(message);
 
                 if(data.type == 'ping') return false;
-                if(data.type == 'typing') return sendToAll({type:'typing', typing:data.typing, user:clients[conn.id].un});
-                if(data.type == 'delete' && clients[conn.id].role > 0) sendToAll({type:'server', info:'delete', mid:data.message});
+                if(data.type == 'typing') return utils.sendToAll({type:'typing', typing:data.typing, user:clients[conn.id].un});
+                if(data.type == 'delete' && clients[conn.id].role > 0) utils.sendToAll({type:'server', info:'delete', mid:data.message});
                 if(data.type == 'update') return updateUser(conn.id, data.user);
 
                 if(data.message.length > 768) {
@@ -130,27 +126,29 @@ chat.on('connection', function(conn) {
                     message = JSON.stringify(data);
                 }
 
-                if(data.type == 'pm') consoleLog(logMessage, '[PM] ' + chalk.underline(clients[conn.id].un) + ' to ' + chalk.underline(data.extra) + ': ' + data.message);
-                else consoleLog(logMessage, '[' + data.type.charAt(0).toUpperCase() + data.type.substring(1) + '] ' + chalk.underline(clients[conn.id].un) + ': ' + data.message);
+                if(data.type == 'pm') log('message', chalk.underline(clients[conn.id].un) + ' to ' + chalk.underline(data.extra) + ': ' + data.message);
+                else log('message', '[' + data.type.charAt(0).toUpperCase() + data.type.substring(1) + '] ' + chalk.underline(clients[conn.id].un) + ': ' + data.message);
 
                 handleSocket(clients[conn.id], message);
             } catch(err) {
-                return consoleLog(logError, err);
+                return log('error', err);
             }
+
             rateLimit[conn.id] -= 1;
         }
     });
 
     conn.on('close', function() {
-        consoleLog(logSocket, chalk.underline(conn.id) + ': disconnected');
-        sendToAll({type:'typing', typing:false, user:clients[conn.id].un});
-        sendToAll({type:'server', info:'disconnection', user:users[clients[conn.id].id]});
+        log('socket', chalk.underline(conn.id) + ': disconnected');
+        utils.sendToAll({type:'typing', typing:false, user:clients[conn.id].un});
+        utils.sendToAll({type:'server', info:'disconnection', user:users[clients[conn.id].id]});
         delete users[clients[conn.id].id];
         delete clients[conn.id];
     });
 });
 
-// Util
+
+/* Functions */
 function updateUser(id, name) {
     if(name.length > 2 && name.length < 17 && name.indexOf(' ') < 0 && !checkUser(name) && name.match(alphanumeric) && name != 'Console' && name != 'System') {
         if(clients[id].un == null) {
@@ -159,7 +157,7 @@ function updateUser(id, name) {
         }
 
         users[clients[id].id].un = name;
-        sendToAll({
+        utils.sendToAll({
             type: 'server',
             info: clients[id].un == null ? 'connection' : 'update',
             user: {
@@ -184,42 +182,6 @@ function updateUser(id, name) {
     }
 }
 
-function sendToAll(data) {
-    for(var client in clients) {
-        clients[client].con.write(JSON.stringify(data));
-    }
-}
-
-function sendToOne(data, user, type) {
-    for(var client in clients) {
-        if(clients[client].un == user) {
-            if(type == 'message') clients[client].con.write(JSON.stringify(data));
-            if(type == 'role') {
-                clients[client].role = data.role;
-                users[clients[client].id].role = data.role;
-            }
-        }
-    }
-}
-
-function sendBack(data, user) {
-    clients[user.con.id].con.write(JSON.stringify(data));
-}
-
-function checkUser(user) {
-    for(var client in clients) {
-        if(clients[client].un == user)
-            return true;
-    }
-    return false;
-}
-
-function getUserByName(name) {
-    for(client in clients)
-        if(clients[client].un == name)
-            return clients[client];
-}
-
 function handleSocket(user, message) {
     var data = JSON.parse(message);
 
@@ -232,14 +194,14 @@ function handleSocket(user, message) {
     switch(data.type) {
         case 'pm':
             if(data.extra != data.user && checkUser(data.extra)) {
-                sendToOne(data, data.extra, 'message');
+                utils.sendToOne(data, data.extra, 'message');
                 data.subtxt = 'PM to ' + data.extra;
-                sendBack(data, user);
+                utils.sendBack(data, user);
             } else {
                 data.type = 'light';
                 data.subtxt = null;
                 data.message = checkUser(data.extra) ? 'You can\'t PM yourself' : 'User not found';
-                sendBack(data, user);
+                utils.sendBack(data, user);
             }
             break;
 
@@ -247,11 +209,11 @@ function handleSocket(user, message) {
             if(user.role > 0) {
                 if(data.type == 'global') {
                     if(user.role == 3) {
-                        return sendToAll(data);
+                        return utils.sendToAll(data);
                     } else {
                         data.subtxt = null;
                         data.message = 'You don\'t have permission to do that';
-                        return sendBack(data, user);
+                        return utils.sendBack(data, user);
                     }
                 } else {
                     data.subtxt = null;
@@ -264,21 +226,22 @@ function handleSocket(user, message) {
                                     if(!isNaN(time) && time > 0) {
                                         if(user.role > 1 && getUserByName(data.message).role == 0) {
                                             for(var client in clients) {
-                                                if(clients[client].un == data.message)
+                                                if(clients[client].un == data.message) {
                                                     bans.push([clients[client].ip, Date.now(), time * 1000 * 60]);
+                                                }
                                             }
 
                                             data.extra = data.message;
                                             data.message = data.user + ' banned ' + data.message + ' from the server for ' + time + ' minutes';
-                                            return sendToAll(data);
+                                            return utils.sendToAll(data);
                                         } else {
                                             data.message = 'You don\'t have permission to do that';
-                                            return sendBack(data, user);
+                                            return utils.sendBack(data, user);
                                         }
                                     } else {
                                         data.type = 'light';
                                         data.message = 'Use /ban [user] [minutes]';
-                                        return sendToOne(data, data.user, 'message')
+                                        return utils.sendToOne(data, data.user, 'message')
                                     }
                                     break;
 
@@ -295,16 +258,16 @@ function handleSocket(user, message) {
                                             if(data.role == 3) role = 'Administrator';
                                             data.message = data.user + ' set ' + data.message + '\'s role to ' + role;
 
-                                            sendToOne(data, JSON.parse(message).message, 'role');
-                                            sendToAll({type:'server', info:'clients', clients:users});
+                                            utils.sendToOne(data, JSON.parse(message).message, 'role');
+                                            utils.sendToAll({type:'server', info:'clients', clients:users});
                                         } else {
                                             data.message = 'You don\'t have permission to do that';
-                                            return sendBack(data, user);
+                                            return utils.sendBack(data, user);
                                         }
                                     } else {
                                         data.type = 'light';
                                         data.message = 'Use /role [user] [0-3]';
-                                        return sendToOne(data, data.user, 'message')
+                                        return utils.sendToOne(data, data.user, 'message')
                                     }
                                     break;
 
@@ -314,61 +277,40 @@ function handleSocket(user, message) {
                                         data.message = data.user + ' kicked ' + data.message + ' from the server';
                                     } else {
                                         data.message = 'You don\'t have permission to do that';
-                                        return sendBack(data, user);
+                                        return utils.sendBack(data, user);
                                     }
                                     break;
                             }                            
-                            sendToAll(data);
+                            utils.sendToAll(data);
                         } else {
                             data.type = 'light';
                             data.message = 'User not found';
-                            sendBack(data, user);
+                            utils.sendBack(data, user);
                         }
                     } else {
                         data.message = 'You can\'t do that to yourself';
-                        sendBack(data, user);
+                        utils.sendBack(data, user);
                     }
                 }
             } else {
                 data.message = 'You don\'t have permission to do that';
-                sendBack(data, user);
+                utils.sendBack(data, user);
             }
             break;
 
         default:
-            sendToAll(data);
+            utils.sendToAll(data);
             break;
     }
 }
 
-function getTime() {
-    var now = new Date(),
-        time = [now.getHours(), now.getMinutes(), now.getSeconds()];
- 
-    for(var i = 0; i < 3; i++) {
-        if(time[i] < 10)
-            time[i] = "0" + time[i];
-    }
- 
-    return time.join(":");
+
+
+/* Internal */
+if(config.readline.use) {
+    readLine();
 }
 
-function consoleLog(type, message) {
-    if(config.log) {
-        if(config.readline) {
-            process.stdout.clearLine();
-            process.stdout.cursorTo(0);
-            console.log('[' + getTime() + '] ' + type + message);
-            rl.prompt(true);
-        } else {
-            console.log('[' + getTime() + '] ' + type + message);
-        }
-    }
-}
-
-
-// Intern
-if(config.readline) readLine();
 function readLine() {
     rl.on('line', function(line) {
         var data = {};
@@ -381,18 +323,16 @@ function readLine() {
             data.extra = line.substring(6);
             data.role = 3;
 
-            sendToAll(data);
-            sendToOne(data, line.substring(6), data.type);
+            utils.sendToAll(data);
+            utils.sendToOne(data, line.substring(6), data.type);
         }
 
         rl.prompt();
     }).on('close', function() {
-        consoleLog(logStop, 'Shutting down\n');
+        log('stop', 'Shutting down\n');
         process.exit(0);
     });
 }
-
-var server;
 
 if(!config.ssl.use) {
     var http = require('http');
@@ -411,20 +351,6 @@ server.listen(port);
 server.on('error', onError);
 server.on('listening', onListening);
 
-function normalizePort(val) {
-    var port = parseInt(val, 10);
-
-    if(isNaN(port)) {
-        return val;
-    }
-
-    if(port >= 0) {
-        return port;
-    }
-
-    return false;
-}
-
 function onError(error) {
     if(error.syscall !== 'listen') {
         throw error;
@@ -432,7 +358,7 @@ function onError(error) {
 
     var bind = typeof port === 'string' ? 'Pipe ' + port : 'Port ' + port;
 
-    switch (error.code) {
+    switch(error.code) {
         case 'EACCES':
             console.error(bind + ' requires elevated privileges');
             process.exit(1);
@@ -449,11 +375,10 @@ function onError(error) {
 }
 
 function onListening() {
+    log('start', 'Listening at ' + bind);
+
     var addr = server.address();
-    var bind = typeof addr === 'string'
-        ? 'pipe ' + addr
-        : 'port ' + addr.port;
-    consoleLog(logStart, 'Listening at ' + bind);
+    var bind = typeof addr === 'string' ? 'pipe ' + addr : 'port ' + addr.port;
 }
 
 chat.installHandlers(server, {prefix:'/socket', log:function(){}});
