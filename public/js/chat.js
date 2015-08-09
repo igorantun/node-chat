@@ -1,26 +1,20 @@
-// Variables
-var user,
-    timer,
-    socket,
-    oldname,
-    username,
-    typeTimer,
-    clients = [],
-    usersTyping = [],
-    nmr = 0,
-    dev = true,
-    unread = 0,
-    focus = true,
-    typing = false,
-    connected = false,
-    version = VERSION,
-    blop = new Audio('sounds/blop.wav');
-
-emojione.ascii = true;
-emojione.imageType = 'png';
-emojione.unicodeAlt = false;
-document.getElementById('version').innerHTML = version;
-
+/* Variables */
+var user;
+var timer;
+var socket;
+var oldname;
+var username;
+var typeTimer;
+var clients = [];
+var usersTyping = [];
+var nmr = 0;
+var dev = true;
+var unread = 0;
+var focus = true;
+var typing = false;
+var connected = false;
+var version = VERSION;
+var blop = new Audio('sounds/blop.wav');
 var regex = /(&zwj;|&nbsp;)/g;
 
 var settings = {
@@ -33,9 +27,17 @@ var settings = {
     'recognition': false
 };
 
-// Connection
+
+/* Config */
+emojione.ascii = true;
+emojione.imageType = 'png';
+emojione.unicodeAlt = false;
+document.getElementById('version').innerHTML = version;
+
+
+/* Connection */
 var connect = function() {
-    socket = new WebSocket('ws://'+ window.location.host +'/socket/websocket');
+    socket = new WebSocket('ws://' + window.location.host + '/socket/websocket');
 
     socket.onopen = function() {
         var ping = setInterval(function(){
@@ -63,18 +65,23 @@ var connect = function() {
 
     socket.onmessage = function(e) {
         var data = JSON.parse(e.data);
-        if(dev) console.log(data);
 
-        if(data.type == 'delete')
+        if(dev) {
+            console.log(data);
+        }
+
+        if(data.type == 'delete') {
             return $('div[data-mid="' + data.message + '"]').remove();
+        }
 
         if(data.type == 'typing') {
             var string;
             if(data.user != username) {
-                if(data.typing)
+                if(data.typing) {
                     usersTyping.push(data.user);
-                else
+                } else {
                     usersTyping.splice(usersTyping.indexOf(data.user), 1);
+                }
             }
 
             
@@ -184,15 +191,19 @@ var connect = function() {
             if(!focus) {
                 unread++;
                 document.title = '(' + unread + ') Node.JS Chat';
-                if(settings.sound)
+                if(settings.sound) {
                     blop.play();
-                if(settings.desktop)
+                }
+                if(settings.desktop) {
                     desktopNotif(data.user + ': ' + data.message);
+                }
             }
         }
     }
 };
 
+
+/* Functions */
 function sendSocket(value, method, other, txt) {
     socket.send(JSON.stringify({
         type: method,
@@ -209,12 +220,12 @@ function updateInfo() {
     }));
 }
 
-
-// Utilities
 function getUserByName(name) {
-    for(client in clients)
-        if(clients[client].un == name)
+    for(client in clients) {
+        if(clients[client].un == name) {
             return clients[client];
+        }
+    }
 }
 
 function updateBar(icon, placeholder, disable) {
@@ -225,13 +236,24 @@ function updateBar(icon, placeholder, disable) {
 }
 
 function showChat(type, user, message, subtxt, mid) {
-    if(type == 'global' || type == 'kick' || type == 'ban' || type == 'info' || type == 'light' || type == 'help' || type == 'role') user = 'System';
-    if(type == 'me' || type == 'em') type = 'emote';
-    if(!mid) mid == 'system';
-
     var nameclass = '';
+
+    if(type == 'global' || type == 'kick' || type == 'ban' || type == 'info' || type == 'light' || type == 'help' || type == 'role') {
+        user = 'System';
+    }
+
+    if(type == 'me' || type == 'em') {
+        type = 'emote';
+    }
+
+    if(!mid) {
+        mid == 'system';
+    }
+
     if(type == 'emote' || type == 'message') {
-        if(user == username && getUserByName(user).role == 0) nameclass = 'self';
+        if(user == username && getUserByName(user).role == 0) {
+            nameclass = 'self';
+        }
         else {
             if(getUserByName(user).role == 1) nameclass = 'helper';
             if(getUserByName(user).role == 2) nameclass = 'moderator';
@@ -239,10 +261,11 @@ function showChat(type, user, message, subtxt, mid) {
         }
     }
 
-    if(!subtxt)
+    if(!subtxt) {
         $('#panel').append('<div data-mid="' + mid + '" class="' + type + '""><span class="name ' + nameclass + '"><b><a class="namelink" href="javascript:void(0)">' + user + '</a></b></span><span class="delete"><a href="javascript:void(0)">DELETE</a></span><span class="timestamp">' + getTime() + '</span><span class="msg">' + message + '</span></div>');
-    else
+    } else {
         $('#panel').append('<div  data-mid="' + mid + '" class="' + type + '""><span class="name ' + nameclass + '"><b><a class="namelink" href="javascript:void(0)">' + user + '</a></b></span><span class="timestamp">(' + subtxt + ') ' + getTime() + '</span><span class="msg">' + message + '</span></div>');
+    }
     
     $('#panel').animate({scrollTop: $('#panel').prop('scrollHeight')}, 500);
     updateStyle();
@@ -355,8 +378,9 @@ function updateStyle() {
     var element = document.getElementsByClassName('msg')[nmr];
 
     if(element.innerHTML != undefined) {
-        if(settings.greentext && element.innerHTML.indexOf('&gt;') == 0)
+        if(settings.greentext && element.innerHTML.indexOf('&gt;') == 0) {
             element.style.color = '#689f38';
+        }
 
         if(settings.emoji) {
             var input = element.innerHTML;
@@ -367,11 +391,11 @@ function updateStyle() {
 }
 
 
-// Triggers
+/* Binds */
 $(document).ready(function() {
     $('#user').bind('click', function() {
-        var content = '',
-            admin;
+        var content = '';
+        var admin;
 
         for(var i in clients) {
             if(clients[i] != undefined) {
@@ -513,7 +537,7 @@ $(document).ready(function() {
 });
 
 
-// Intern
+/* Internal */
 if(Notification) {
     $('#toggle-desktop').show();
 }
@@ -553,8 +577,9 @@ speechToText.onerror = function(event) {
 }
 
 function desktopNotif(message) {
-    if(!Notification) 
+    if(!Notification) {
         return;
+    }
 
     var notification = new Notification('You\'ve got a new message', {
         icon: 'http://i.imgur.com/ehB0QcM.png',
