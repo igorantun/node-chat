@@ -57,7 +57,7 @@ app.get('/chat', function (req, res) {
 
 /* Logic */
 chat.on('connection', function(conn) {
-    log('socket', chalk.underline(conn.id) +': connected');
+    log('socket', chalk.underline(conn.id) + ': connected (' + conn.headers['x-forwarded-for'] + ')');
     rateLimit[conn.id] = 1;
     lastTime[conn.id] = Date.now();
     currentTime[conn.id] = Date.now();
@@ -150,7 +150,7 @@ chat.on('connection', function(conn) {
     });
 
     conn.on('close', function() {
-        log('socket', chalk.underline(conn.id) + ': disconnected');
+        log('socket', chalk.underline(conn.id) + ': disconnected (' + clients[conn.id].ip + ')');
         utils.sendToAll(clients, {type:'typing', typing:false, user:clients[conn.id].un});
         utils.sendToAll(clients, {type:'server', info:'disconnection', user:users[clients[conn.id].id]});
         delete users[clients[conn.id].id];
