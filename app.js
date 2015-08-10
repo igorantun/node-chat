@@ -116,10 +116,21 @@ chat.on('connection', function(conn) {
             try {
                 var data = JSON.parse(message);
 
-                if(data.type == 'ping') return false;
-                if(data.type == 'typing') return utils.sendToAll(clients, {type:'typing', typing:data.typing, user:clients[conn.id].un});
-                if(data.type == 'delete' && clients[conn.id].role > 0) utils.sendToAll(clients, {type:'server', info:'delete', mid:data.message});
-                if(data.type == 'update') return updateUser(conn.id, data.user);
+                if(data.type == 'ping') {
+                    return false;
+                }
+
+                if(data.type == 'typing') {
+                    return utils.sendToAll(clients, {type:'typing', typing:data.typing, user:clients[conn.id].un});
+                }
+
+                if(data.type == 'delete' && clients[conn.id].role > 0) {
+                    utils.sendToAll(clients, {type:'server', info:'delete', mid:data.message});
+                }
+
+                if(data.type == 'update') {
+                    return updateUser(conn.id, data.user);
+                }
 
                 if(data.message.length > 768) {
                     data.message = data.message.substring(0, 768);
@@ -194,7 +205,7 @@ function handleSocket(user, message) {
     switch(data.type) {
         case 'pm':
             if(data.extra != data.user && utils.checkUser(clients, data.extra)) {
-                utils.sendToOne(clients, data, data.extra, 'message');
+                utils.sendToOne(clients, users, data, data.extra, 'message');
                 data.subtxt = 'PM to ' + data.extra;
                 utils.sendBack(clients, data, user);
             } else {
@@ -241,7 +252,7 @@ function handleSocket(user, message) {
                                     } else {
                                         data.type = 'light';
                                         data.message = 'Use /ban [user] [minutes]';
-                                        return utils.sendToOne(clients, data, data.user, 'message')
+                                        return utils.sendToOne(clients, users, data, data.user, 'message')
                                     }
                                     break;
 
@@ -258,7 +269,7 @@ function handleSocket(user, message) {
                                             if(data.role == 3) role = 'Administrator';
                                             data.message = data.user + ' set ' + data.message + '\'s role to ' + role;
 
-                                            utils.sendToOne(clients, data, JSON.parse(message).message, 'role');
+                                            utils.sendToOne(clients, users, data, JSON.parse(message).message, 'role');
                                             utils.sendToAll(clients, {type:'server', info:'clients', clients:users});
                                         } else {
                                             data.message = 'You don\'t have permission to do that';
@@ -267,7 +278,7 @@ function handleSocket(user, message) {
                                     } else {
                                         data.type = 'light';
                                         data.message = 'Use /role [user] [0-3]';
-                                        return utils.sendToOne(clients, data, data.user, 'message')
+                                        return utils.sendToOne(clients, users, data, data.user, 'message')
                                     }
                                     break;
 
@@ -324,7 +335,7 @@ function readLine() {
             data.role = 3;
 
             utils.sendToAll(clients, data);
-            utils.sendToOne(clients, data, line.substring(6), data.type);
+            utils.sendToOne(clients, users, data, line.substring(6), data.type);
         }
 
         rl.prompt();

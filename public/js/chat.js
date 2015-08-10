@@ -37,7 +37,15 @@ document.getElementById('version').innerHTML = version;
 
 /* Connection */
 var connect = function() {
-    socket = new WebSocket('ws://' + window.location.host + '/socket/websocket');
+    var protocol;
+
+    if(window.location.protocol === 'https') {
+        protocol = 'wss://';
+    } else {
+        protocol = 'ws://';
+    }
+
+    socket = new WebSocket(protocol + window.location.host + '/socket/websocket');
 
     socket.onopen = function() {
         var ping = setInterval(function(){
@@ -104,10 +112,23 @@ var connect = function() {
             switch(data.info) {
                 case 'rejected':
                     var message;
-                    if(data.reason == 'length') message = 'Your username must have at least 3 characters and no more than 16 characters';
-                    if(data.reason == 'format') message = 'Your username must only contain alphanumeric characters (numbers, letters and underscores)';
-                    if(data.reason == 'taken') message = 'This username is already taken';
-                    if(data.reason == 'banned') message = 'You have been banned from the server for ' + data.time / 60 / 1000 + ' minutes. You have to wait until you get unbanned to be able to connect again';
+                    
+                    if(data.reason == 'length') {
+                        message = 'Your username must have at least 3 characters and no more than 16 characters';
+                    }
+
+                    if(data.reason == 'format') {
+                        message = 'Your username must only contain alphanumeric characters (numbers, letters and underscores)';
+                    }
+
+                    if(data.reason == 'taken') {
+                        message = 'This username is already taken';
+                    }
+
+                    if(data.reason == 'banned') {
+                        message = 'You have been banned from the server for ' + data.time / 60 / 1000 + ' minutes. You have to wait until you get unbanned to be able to connect again';
+                    }
+
                     showChat('light', null, message);
 
                     if(!data.keep) {
@@ -132,14 +153,20 @@ var connect = function() {
                     break;
 
                 case 'connection':
-                    showChat('info', null, data.user.un + ' connected to the server');
+                    var userip = data.user.ip ? '[' + data.user.ip + ']' : '';
+                    showChat('info', null, data.user.un + userip + ' connected to the server');
+
                     clients[data.user.id] = data.user;
                     document.getElementById('users').innerHTML = Object.keys(clients).length + ' USERS';
                     break;
 
                 case 'disconnection':
-                    if(data.user.un != null)
-                        showChat('info', null, data.user.un + ' disconnected from the server');
+                    var userip = data.user.ip ? '[' + data.user.ip + ']' : '';
+
+                    if(data.user.un != null) {
+                        showChat('info', null, data.user.un + userip + ' disconnected from the server');
+                    }
+
                     delete clients[data.user.id];
                     document.getElementById('users').innerHTML = Object.keys(clients).length + ' USERS';
                     break;
@@ -160,8 +187,9 @@ var connect = function() {
         } else if((data.type == 'kick' || data.type == 'ban') && data.extra == username) {
             location.reload();
         } else {
-            if(data.message.indexOf('@' + username) > -1)
+            if(data.message.indexOf('@' + username) > -1) {
                 data.type = 'mention';
+            }
 
             if(settings.synthesis) {
                 textToSpeech.text = data.message;
@@ -191,9 +219,11 @@ var connect = function() {
             if(!focus) {
                 unread++;
                 document.title = '(' + unread + ') Node.JS Chat';
+
                 if(settings.sound) {
                     blop.play();
                 }
+
                 if(settings.desktop) {
                     desktopNotif(data.user + ': ' + data.message);
                 }
@@ -253,8 +283,7 @@ function showChat(type, user, message, subtxt, mid) {
     if(type == 'emote' || type == 'message') {
         if(user == username && getUserByName(user).role == 0) {
             nameclass = 'self';
-        }
-        else {
+        } else {
             if(getUserByName(user).role == 1) nameclass = 'helper';
             if(getUserByName(user).role == 2) nameclass = 'moderator';
             if(getUserByName(user).role == 3) nameclass = 'administrator';
@@ -285,26 +314,31 @@ function handleInput() {
             switch(command[0].toLowerCase()) {
                 case 'pm': case 'msg': case 'role': case 'kick': case 'ban': case 'name': case 'alert': case 'me': case 'em':
                     if(value.substring(command[0].length).length > 1) {
-                        if((command[0] == 'pm' || command[0] == 'msg') && value.substring(command[0].concat(command[1]).length).length > 2)
+                        if((command[0] == 'pm' || command[0] == 'msg') && value.substring(command[0].concat(command[1]).length).length > 2) {
                             sendSocket(value.substring(command[0].concat(command[1]).length + 2), 'pm', command[1], 'PM');
-                        else if(command[0] == 'pm' || command[0] == 'msg')
+                        } else if(command[0] == 'pm' || command[0] == 'msg') {
                             showChat('light', 'Error', 'Use /' + command[0] + ' [user] [message]');
+                        }
 
-                        if(command[0] == 'ban' && value.substring(command[0].concat(command[1]).length).length > 2)
+                        if(command[0] == 'ban' && value.substring(command[0].concat(command[1]).length).length > 2) {
                             sendSocket(command[1], 'ban', command[2]);
-                        else if(command[0] == 'ban')
+                        } else if(command[0] == 'ban') {
                             showChat('light', 'Error', 'Use /ban [user] [minutes]');
+                        }
 
-                        if(command[0] == 'alert')
+                        if(command[0] == 'alert') {
                             sendSocket(value.substring(command[0].length + 2), 'global', null, username);
+                        }
 
-                        if((command[0] == 'role') && value.substring(command[0].concat(command[1]).length).length > 3)
+                        if((command[0] == 'role') && value.substring(command[0].concat(command[1]).length).length > 3) {
                             sendSocket(command[1], 'role', value.substring(command[0].concat(command[1]).length + 3));
-                        else if(command[0] == 'role')
+                        } else if(command[0] == 'role') {
                             showChat('light', 'Error', 'Use /' + command[0] + ' [user] [0-3]');
+                        }
 
-                        if(command[0] == 'kick' || command[0] == 'me' || command[0] == 'em')
+                        if(command[0] == 'kick' || command[0] == 'me' || command[0] == 'em') {
                             sendSocket(value.substring(command[0].length + 2), command[0]);
+                        }
 
                         if(command[0] == 'name') {
                             oldname = username;
@@ -313,18 +347,29 @@ function handleInput() {
                         }
                     } else {
                         var variables;
-                        if(command[0] == 'alert' || command[0] == 'me' || command[0] == 'em')
+                        if(command[0] == 'alert' || command[0] == 'me' || command[0] == 'em') {
                             variables = ' [message]';
-                        if(command[0] == 'role')
+                        }
+
+                        if(command[0] == 'role') {
                             variables = ' [user] [0-3]';
-                        if(command[0] == 'ban')
+                        }
+
+                        if(command[0] == 'ban') {
                             variables = ' [user] [minutes]';
-                        if(command[0] == 'pm')
+                        }
+
+                        if(command[0] == 'pm') {
                             variables = ' [user] [message]';
-                        if(command[0] == 'kick')
+                        }
+
+                        if(command[0] == 'kick') {
                             variables = ' [user]';
-                        if(command[0] == 'name')
+                        }
+
+                        if(command[0] == 'name') {
                             variables = ' [name]';
+                        }
 
                         showChat('light', 'Error', 'Use /' + command[0] + variables);
                     }
@@ -362,12 +407,13 @@ function handleInput() {
 }
 
 function getTime() {
-    var now = new Date(),
-        time = [now.getHours(), now.getMinutes(), now.getSeconds()];
+    var now = new Date();
+    var time = [now.getHours(), now.getMinutes(), now.getSeconds()];
  
     for(var i = 0; i < 3; i++) {
-        if(time[i] < 10)
+        if(time[i] < 10) {
             time[i] = '0' + time[i];
+        }
     }
  
     return time.join(':');
@@ -498,8 +544,9 @@ $(document).ready(function() {
         settings.desktop = document.getElementById('desktop').checked;
         localStorage.settings = JSON.stringify(settings);
 
-        if(Notification.permission !== 'granted')
+        if(Notification.permission !== 'granted') {
             Notification.requestPermission();
+        }
     });
 
     $('#recognition').bind('change', function() {
