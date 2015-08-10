@@ -180,8 +180,8 @@ function updateUser(id, name) {
         });
         clients[id].un = name;
     } else {
-        var motive = 'format',
-            check = false;
+        var motive = 'format';
+        var check = false;
 
         if(!name.match(alphanumeric)) motive = 'format';
         if(name.length < 3 || name.length > 16) motive = 'length';
