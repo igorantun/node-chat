@@ -441,15 +441,32 @@ function updateStyle() {
 $(document).ready(function() {
     $('#user').bind('click', function() {
         var content = '';
+        var userip = '';
         var admin;
 
         for(var i in clients) {
             if(clients[i] != undefined) {
-                if(clients[i].role == 0) admin = '</li>'
-                if(clients[i].role == 1) admin = ' - <b>Helper</b></li>';
-                if(clients[i].role == 2) admin = ' - <b>Moderator</b></li>';
-                if(clients[i].role == 3) admin = ' - <b>Administrator</b></li>';
-                content += '<li><b>ID:</b> ' + clients[i].id + ' - <b>Name:</b> ' + clients[i].un + admin;
+                if(clients[i].ip) {
+                    userip = '(' + clients[i].ip + ')';
+                }
+
+                if(clients[i].role === 0) {
+                    admin = '</li>';
+                }
+                
+                if(clients[i].role === 1) {
+                    admin = ' - <b>Helper</b></li>';
+                }
+
+                if(clients[i].role === 2) {
+                    admin = ' - <b>Moderator</b></li>';
+                }
+
+                if(clients[i].role === 3) {
+                    admin = ' - <b>Administrator</b></li>';
+                }
+
+                content += '<li>' + '<b>#' + clients[i].id + '</b> ' + userip + ' - ' + clients[i].un + admin;
             }
         }
 

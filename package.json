@@ -1,6 +1,6 @@
 {
   "name": "node-chat",
-  "version": "0.26.3",
+  "version": "0.26.7",
   "private": true,
   "scripts": {
     "start": "node app.js"
