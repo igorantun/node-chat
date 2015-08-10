@@ -13,12 +13,14 @@ You can test a fully working live demo at https://igorantun.com/chat
 ---
 
 ## Features
+- Material Design
 - Emoji support
 - User @mentioning
 - Private messaging
 - Message deleting (for admins)
 - Ability to kick/ban users (for admins)
-- [Other awesome features yet to be implemented](https://github.com/IgorAntun/node-chat/blob/master/TODO.md)
+- See other user's IPs (for admins)
+- Other awesome features yet to be implemented
 
 .
 ![User Features](http://i.imgur.com/WbF1fi2.png)
