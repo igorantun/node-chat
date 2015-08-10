@@ -39,7 +39,7 @@ document.getElementById('version').innerHTML = version;
 var connect = function() {
     var protocol;
 
-    if(window.location.protocol === 'https') {
+    if(window.location.protocol === 'https:') {
         protocol = 'wss://';
     } else {
         protocol = 'ws://';
@@ -112,7 +112,7 @@ var connect = function() {
             switch(data.info) {
                 case 'rejected':
                     var message;
-                    
+
                     if(data.reason == 'length') {
                         message = 'Your username must have at least 3 characters and no more than 16 characters';
                     }
@@ -153,7 +153,7 @@ var connect = function() {
                     break;
 
                 case 'connection':
-                    var userip = data.user.ip ? '[' + data.user.ip + ']' : '';
+                    var userip = data.user.ip ? ' [' + data.user.ip + ']' : '';
                     showChat('info', null, data.user.un + userip + ' connected to the server');
 
                     clients[data.user.id] = data.user;
@@ -161,7 +161,7 @@ var connect = function() {
                     break;
 
                 case 'disconnection':
-                    var userip = data.user.ip ? '[' + data.user.ip + ']' : '';
+                    var userip = data.user.ip ? ' [' + data.user.ip + ']' : '';
 
                     if(data.user.un != null) {
                         showChat('info', null, data.user.un + userip + ' disconnected from the server');
