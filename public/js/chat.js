@@ -24,7 +24,8 @@ var settings = {
     'sound': true,
     'desktop': false,
     'synthesis': false,
-    'recognition': false
+    'recognition': false,
+    'inline': false
 };
 
 
@@ -293,13 +294,42 @@ function showChat(type, user, message, subtxt, mid) {
     if(!subtxt) {
         $('#panel').append('<div data-mid="' + mid + '" class="' + type + '""><span class="name ' + nameclass + '"><b><a class="namelink" href="javascript:void(0)">' + user + '</a></b></span><span class="delete"><a href="javascript:void(0)">DELETE</a></span><span class="timestamp">' + getTime() + '</span><span class="msg">' + message + '</span></div>');
     } else {
-        $('#panel').append('<div  data-mid="' + mid + '" class="' + type + '""><span class="name ' + nameclass + '"><b><a class="namelink" href="javascript:void(0)">' + user + '</a></b></span><span class="timestamp">(' + subtxt + ') ' + getTime() + '</span><span class="msg">' + message + '</span></div>');
+        $('#panel').append('<div data-mid="' + mid + '" class="' + type + '""><span class="name ' + nameclass + '"><b><a class="namelink" href="javascript:void(0)">' + user + '</a></b></span><span class="timestamp">(' + subtxt + ') ' + getTime() + '</span><span class="msg">' + message + '</span></div>');
     }
     
     $('#panel').animate({scrollTop: $('#panel').prop('scrollHeight')}, 500);
     updateStyle();
     nmr++;
+    
+    //Inline imgs
+    if(settings.inline){
+        var m = message.match(/(https?|ftp):\/\/[^\s/$.?#].[^\s]*/gmi);
+        if(m) {
+            m.forEach(function(e, i, a){
+                //Gfycat support
+                if(e.indexOf('//gfycat') != -1){
+                    var oldUrl = e;
+                    e = e.replace('//gfycat.com', '//gfycat.com/cajax/get').replace('http://', 'https://');
+                    $.getJSON(e, function(data){
+                        testImage(data.gfyItem.gifUrl.replace('http://', 'https://'), mid, oldUrl);
+                    });
+                } else {
+                    testImage(e, mid, e);
+                }
+            });
+        }
+    }
 }
+
+function testImage(url, mid, oldUrl) {
+    var img = new Image();
+    img.onload = function() {
+        $('div[data-mid=' + mid + '] .msg a[href="' + oldUrl.replace('https://', 'http://') + '"]').html(img);
+        $('#panel').animate({scrollTop: $('#panel').prop('scrollHeight')}, 500);
+    };
+    img.src = url;
+}
+
 
 function handleInput() {
     var value = $('#message').val().replace(regex, ' ').trim();
@@ -556,7 +586,12 @@ $(document).ready(function() {
         settings.synthesis = document.getElementById('synthesis').checked;
         localStorage.settings = JSON.stringify(settings);
     });
-
+    
+    $('#inline').bind('change', function() {
+        settings.inline = document.getElementById('inline').checked;
+        localStorage.settings = JSON.stringify(settings);
+    });
+        
     $('#desktop').bind('change', function() {
         settings.desktop = document.getElementById('desktop').checked;
         localStorage.settings = JSON.stringify(settings);
@@ -662,6 +697,7 @@ if(typeof(Storage) !== 'undefined') {
         document.getElementById('desktop').checked = settings.desktop;
         document.getElementById('synthesis').checked = settings.synthesis;
         document.getElementById('recognition').checked = settings.recognition;
+        document.getElementById('inline').checked = settings.inline;
 
         if(settings.recognition)
             $('#audio').show();

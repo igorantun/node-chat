@@ -4,7 +4,7 @@
     max-height: 300px;
 }
 
-#emoji, #sound, #desktop, #greentext, #synthesis, #recognition {
+#emoji, #sound, #desktop, #greentext, #synthesis, #recognition, #inline {
     margin-left: 10px;
 }
 
@@ -57,6 +57,10 @@
     word-break: break-all;
     padding-right: 20px;
     padding-left: 20px;
+}
+
+.msg a img {
+    max-width: 350px;
 }
 
 .timestamp {
