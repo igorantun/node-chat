@@ -49,8 +49,8 @@ app.locals.version = pack.version;
 
 
 /* Routes */
-app.use('/chat', express.static(__dirname + '/public'));
-app.get('/chat', function (req, res) {
+app.use(config.url, express.static(__dirname + '/public'));
+app.get(config.url, function (req, res) {
     res.render('index', {version:pack.version});
 });
 

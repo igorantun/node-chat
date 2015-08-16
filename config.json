@@ -1,6 +1,7 @@
 {
 	"log": true,
 	"port": 3000,
+	"url": "/",
 	"ssl": {
 		"use": false,
 		"key": "/path/to/your/ssl.key",
