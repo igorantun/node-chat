@@ -21,11 +21,11 @@ var settings = {
     'name': null,
     'emoji': true,
     'greentext': true,
+    'inline': true,
     'sound': true,
     'desktop': false,
     'synthesis': false,
-    'recognition': false,
-    'inline': false
+    'recognition': false
 };
 
 
@@ -301,16 +301,17 @@ function showChat(type, user, message, subtxt, mid) {
     updateStyle();
     nmr++;
     
-    //Inline imgs
-    if(settings.inline){
+    if(settings.inline) {
         var m = message.match(/(https?|ftp):\/\/[^\s/$.?#].[^\s]*/gmi);
+
         if(m) {
-            m.forEach(function(e, i, a){
-                //Gfycat support
-                if(e.indexOf('//gfycat') != -1){
+            m.forEach(function(e, i, a) {
+                // Gfycat Support
+                if(e.indexOf('//gfycat') !== -1) {
                     var oldUrl = e;
                     e = e.replace('//gfycat.com', '//gfycat.com/cajax/get').replace('http://', 'https://');
-                    $.getJSON(e, function(data){
+
+                    $.getJSON(e, function(data) {
                         testImage(data.gfyItem.gifUrl.replace('http://', 'https://'), mid, oldUrl);
                     });
                 } else {
@@ -323,10 +324,12 @@ function showChat(type, user, message, subtxt, mid) {
 
 function testImage(url, mid, oldUrl) {
     var img = new Image();
+
     img.onload = function() {
         $('div[data-mid=' + mid + '] .msg a[href="' + oldUrl.replace('https://', 'http://') + '"]').html(img);
         $('#panel').animate({scrollTop: $('#panel').prop('scrollHeight')}, 500);
     };
+
     img.src = url;
 }
 
@@ -693,14 +696,15 @@ if(typeof(Storage) !== 'undefined') {
         settings = JSON.parse(localStorage.settings);
         document.getElementById('emoji').checked = settings.emoji;
         document.getElementById('greentext').checked = settings.greentext;
+        document.getElementById('inline').checked = settings.inline;
         document.getElementById('sound').checked = settings.sound;
         document.getElementById('desktop').checked = settings.desktop;
         document.getElementById('synthesis').checked = settings.synthesis;
         document.getElementById('recognition').checked = settings.recognition;
-        document.getElementById('inline').checked = settings.inline;
 
-        if(settings.recognition)
+        if(settings.recognition) {
             $('#audio').show();
+        }
     }
 }
 
