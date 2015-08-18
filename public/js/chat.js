@@ -420,7 +420,6 @@ function handleInput() {
 
                 case 'help':
                     $('#help-dialog').modal('show');
-                    $('#message').val('');
                     break;
 
                 case 'users':
