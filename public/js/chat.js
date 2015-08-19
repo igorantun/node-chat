@@ -627,6 +627,7 @@ $(document).ready(function() {
             }
             handleInput();
         } else if(connected) {
+            console.log(e.which);
             if(!typing) {
                 typing = true;
                 socket.send(JSON.stringify({type:'typing', typing:true}));
@@ -639,8 +640,40 @@ $(document).ready(function() {
             }, 2000);
         }
     });
-});
 
+    //addition keypress binding for handling autocompletion
+    $("#message").keypress( function(event) {
+        // don't navigate away from the field on tab when selecting an item
+        console.log($(this));
+        if (event.keyCode === $.ui.keyCode.TAB )
+            event.preventDefault();
+    })
+    .autocomplete({
+        minLength: 0,
+        source: function(request, response) {
+            var term = request.term;
+            var results = [];
+            term = term.split(/ \s*/).pop();
+
+            if (term.length > 0 && term[0] === '@') {
+                var names = $.map( clients, function( val ) { return val.un; });
+                results = $.ui.autocomplete.filter(names, term.substr(1));
+            }
+            response(results);
+        },
+        focus: function() {
+            return false; // prevent value inserted on focus
+        },
+        select: function(event, ui) {
+            var terms = this.value.split(/ \s*/);
+            var old = terms.pop();  //get old word
+            var ins = "@" + ui.item.value + " "; //new word to insert
+            var ind = this.value.lastIndexOf(old); //location to insert at
+            this.value = this.value.slice(0,ind) + ins;
+            return false;
+        }
+    });
+});
 
 /* Internal */
 if(Notification) {
