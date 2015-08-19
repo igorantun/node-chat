@@ -627,7 +627,6 @@ $(document).ready(function() {
             }
             handleInput();
         } else if(connected) {
-            console.log(e.which);
             if(!typing) {
                 typing = true;
                 socket.send(JSON.stringify({type:'typing', typing:true}));
@@ -644,7 +643,6 @@ $(document).ready(function() {
     //addition keypress binding for handling autocompletion
     $("#message").keypress( function(event) {
         // don't navigate away from the field on tab when selecting an item
-        console.log($(this));
         if (event.keyCode === $.ui.keyCode.TAB )
             event.preventDefault();
     })
