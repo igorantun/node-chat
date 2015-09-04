@@ -78,7 +78,9 @@ var connect = function() {
         if(dev) {
             console.log(data);
         }
-
+        
+        
+        
         if(data.type == 'delete') {
             return $('div[data-mid="' + data.message + '"]').remove();
         }
@@ -196,7 +198,7 @@ var connect = function() {
                 textToSpeech.text = data.message;
                 speechSynthesis.speak(textToSpeech);
             }
-
+           
             showChat(data.type, data.user, data.message, data.subtxt, data.mid);
         }
 
@@ -692,24 +694,27 @@ if('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
     speechToText.lang = 'en-US';
 }
 
-speechToText.onresult = function(event) {
-    $('#message').val('');
-
-    for (var i = event.resultIndex; i < event.results.length; ++i) {
-        if (event.results[i].isFinal) {
-            $('#message').val(event.results[i][0].transcript);
-            updateBar('mdi-content-send', 'Enter your message here', false);
-            speechToText.stop();
-            handleInput();
-        } else {
-            var oldval = $('#message').val();
-            $('#message').val(oldval + event.results[i][0].transcript);
+if(speechToText) {
+    speechToText.onresult = function(event) {
+        $('#message').val('');
+    
+        for (var i = event.resultIndex; i < event.results.length; ++i) {
+            if (event.results[i].isFinal) {
+                $('#message').val(event.results[i][0].transcript);
+                updateBar('mdi-content-send', 'Enter your message here', false);
+                speechToText.stop();
+                handleInput();
+            } else {
+                var oldval = $('#message').val();
+                $('#message').val(oldval + event.results[i][0].transcript);
+            }
         }
     }
-}
-
-speechToText.onerror = function(event) {
-    updateBar('mdi-content-send', 'Enter your message here', false);
+    
+    speechToText.onerror = function(event) {
+        updateBar('mdi-content-send', 'Enter your message here', false);
+    }
+   
 }
 
 function desktopNotif(message) {
@@ -747,6 +752,7 @@ window.onfocus = function() {
     focus = true;
     unread = 0;
 };
+
 
 window.onblur = function() {
     focus = false;
