@@ -12,6 +12,7 @@ var log = require('./lib/log.js');
 var utils = require('./lib/utils.js');
 var config = require('./config.json');
 var pack = require('./package.json');
+var path = require('path');
 
 
 /* Config */
@@ -43,13 +44,14 @@ if(config.readline.use) {
 
 /* Express */
 app.set('port', port);
+app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
-app.use(favicon(__dirname + '/public/img/favicon.png'));
+app.use(favicon(path.join(__dirname,'public/img/favicon.png')));
 app.locals.version = pack.version;
 
 
 /* Routes */
-app.use(config.url, express.static(__dirname + '/public'));
+app.use(config.url, express.static(path.join(__dirname, 'public')));
 app.get(config.url, function (req, res) {
     res.render('index', {version:pack.version});
 });
