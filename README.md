@@ -7,7 +7,7 @@ This is a node.js chat application powered by SockJS and Express that provides t
 ![Chat Preview](http://i.imgur.com/lgRe8z4.png)
 
 ## Demo
-You can test a fully working live demo at https://igorantun.com/chat
+You can test a fully working live demo at ~~https://igorantun.com/chat~~ *(demo currently offline)*
 - Type `/help` to get a list of the available chat commands
 
 ---
