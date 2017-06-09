@@ -78,9 +78,9 @@ var connect = function() {
         if(dev) {
             console.log(data);
         }
-        
-        
-        
+
+
+
         if(data.type == 'delete') {
             return $('div[data-mid="' + data.message + '"]').remove();
         }
@@ -95,7 +95,7 @@ var connect = function() {
                 }
             }
 
-            
+
             if(usersTyping.length == 1) {
                 string = usersTyping + ' is writing...';
             } else if(usersTyping.length > 4) {
@@ -198,7 +198,7 @@ var connect = function() {
                 textToSpeech.text = data.message;
                 speechSynthesis.speak(textToSpeech);
             }
-           
+
             showChat(data.type, data.user, data.message, data.subtxt, data.mid);
         }
 
@@ -298,11 +298,11 @@ function showChat(type, user, message, subtxt, mid) {
     } else {
         $('#panel').append('<div data-mid="' + mid + '" class="' + type + '""><span class="name ' + nameclass + '"><b><a class="namelink" href="javascript:void(0)">' + user + '</a></b></span><span class="timestamp">(' + subtxt + ') ' + getTime() + '</span><span class="msg">' + message + '</span></div>');
     }
-    
+
     $('#panel').animate({scrollTop: $('#panel').prop('scrollHeight')}, 500);
     updateStyle();
     nmr++;
-    
+
     if(settings.inline) {
         var m = message.match(/(https?|ftp):\/\/[^\s/$.?#].[^\s]*/gmi);
 
@@ -408,7 +408,7 @@ function handleInput() {
 
                         showChat('light', 'Error', 'Use /' + command[0] + variables);
                     }
-                    break; 
+                    break;
 
                 case 'clear':
                     nmr = 0;
@@ -447,13 +447,13 @@ function handleInput() {
 function getTime() {
     var now = new Date();
     var time = [now.getHours(), now.getMinutes(), now.getSeconds()];
- 
+
     for(var i = 0; i < 3; i++) {
         if(time[i] < 10) {
             time[i] = '0' + time[i];
         }
     }
- 
+
     return time.join(':');
 }
 
@@ -491,7 +491,7 @@ $(document).ready(function() {
                 if(clients[i].role === 0) {
                     admin = '</li>';
                 }
-                
+
                 if(clients[i].role === 1) {
                     admin = ' - <b>Helper</b></li>';
                 }
@@ -594,12 +594,12 @@ $(document).ready(function() {
         settings.synthesis = document.getElementById('synthesis').checked;
         localStorage.settings = JSON.stringify(settings);
     });
-    
+
     $('#inline').bind('change', function() {
         settings.inline = document.getElementById('inline').checked;
         localStorage.settings = JSON.stringify(settings);
     });
-        
+
     $('#desktop').bind('change', function() {
         settings.desktop = document.getElementById('desktop').checked;
         localStorage.settings = JSON.stringify(settings);
@@ -651,7 +651,8 @@ $(document).ready(function() {
     .autocomplete({
         minLength: 0,
         source: function(request, response) {
-            var term = request.term;
+            var term = request.termError;
+            // var term = request.term;
             var results = [];
             term = term.split(/ \s*/).pop();
 
@@ -697,7 +698,7 @@ if('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
 if(speechToText) {
     speechToText.onresult = function(event) {
         $('#message').val('');
-    
+
         for (var i = event.resultIndex; i < event.results.length; ++i) {
             if (event.results[i].isFinal) {
                 $('#message').val(event.results[i][0].transcript);
@@ -710,11 +711,11 @@ if(speechToText) {
             }
         }
     }
-    
+
     speechToText.onerror = function(event) {
         updateBar('mdi-content-send', 'Enter your message here', false);
     }
-   
+
 }
 
 function desktopNotif(message) {
