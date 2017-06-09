@@ -651,8 +651,7 @@ $(document).ready(function() {
     .autocomplete({
         minLength: 0,
         source: function(request, response) {
-            var term = request.termError;
-            // var term = request.term;
+            var term = request.token;
             var results = [];
             term = term.split(/ \s*/).pop();
 
