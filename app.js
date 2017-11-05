@@ -354,7 +354,7 @@ if(!config.ssl.use) {
     var https = require('https');
     var opt = {
         key: fs.readFileSync(config.ssl.key),
-        cert: fs.readFileSync(config.ssl.crt)
+        cert: fs.readFileSync(config.ssl.cert)
     };
 
     server = https.createServer(opt, app);
