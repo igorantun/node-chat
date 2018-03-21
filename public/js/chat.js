@@ -1,21 +1,21 @@
 /* Variables */
 var user;
-var timer;
-var socket;
-var oldname;
-var username;
-var typeTimer;
-var clients = [];
-var usersTyping = [];
-var nmr = 0;
-var dev = true;
-var unread = 0;
-var focus = true;
-var typing = false;
-var connected = false;
-var version = VERSION;
-var blop = new Audio('sounds/blop.wav');
-var regex = /(&zwj;|&nbsp;)/g;
+, timer;
+, socket;
+, oldname;
+, username;
+, typeTimer;
+, clients = [];
+, usersTyping = [];
+, nmr = 0;
+, dev = true;
+, unread = 0;
+, focus = true;
+, typing = false;
+, connected = false;
+, version = VERSION;
+, blop = new Audio('sounds/blop.wav');
+, regex = /(&zwj;|&nbsp;)/g;
 
 var settings = {
     'name': null,
