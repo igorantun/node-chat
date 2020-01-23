@@ -6,11 +6,10 @@ const express = require('express')
 const sockjs = require('sockjs')
 const http = require('http')
 const https = require('https')
-const chalk = require('chalk')
 const fs = require('fs')
 
 const path = require('path')
-const log = require('./lib/log.js')
+const logger = require('./lib/log.js')
 const utils = require('./lib/utils.js')
 const config = require('./config.json')
 const pack = require('./package.json')
@@ -34,8 +33,9 @@ let uid = 1
 
 const alphanumeric = /^\w+$/
 
+let rl
 if (config.readline.use) {
-  const rl = readline.createInterface(process.stdin, process.stdout)
+  rl = readline.createInterface(process.stdin, process.stdout)
   rl.setPrompt(config.readline.prompt)
   rl.prompt()
 }
@@ -55,12 +55,6 @@ app.get(config.url, (req, res) => {
 
 /* Logic */
 chat.on('connection', (conn) => {
-  log(
-    'socket',
-    `${chalk.underline(conn.id)}: connected (${
-      conn.headers['x-forwarded-for']
-    })`
-  )
   rateLimit[conn.id] = 1
   lastTime[conn.id] = Date.now()
   currentTime[conn.id] = Date.now()
@@ -123,6 +117,18 @@ chat.on('connection', (conn) => {
       clients[conn.id].warn++
 
       if (clients[conn.id].warn < 6) {
+        logger.info({
+          context: 'user',
+          message: 'User warned for spamming',
+          warn: clients[conn.id].warn,
+          user: {
+            role: clients[conn.id].role,
+            username: clients[conn.id].un,
+            id: clients[conn.id].id,
+            ip: clients[conn.id].ip
+          }
+        })
+
         return conn.write(
           JSON.stringify({
             type: 'server',
@@ -138,6 +144,17 @@ chat.on('connection', (conn) => {
         message: `Server banned ${
           clients[conn.id].un
         } from the server for 5 minutes for spamming the servers`
+      })
+
+      logger.info({
+        context: 'user',
+        message: 'User banned for spamming',
+        user: {
+          role: clients[conn.id].role,
+          username: clients[conn.id].un,
+          id: clients[conn.id].id,
+          ip: clients[conn.id].ip
+        }
       })
 
       return conn.close()
@@ -175,38 +192,51 @@ chat.on('connection', (conn) => {
       }
 
       if (data.type === 'pm') {
-        log(
-          'message',
-          `${chalk.underline(clients[conn.id].un)} to ${chalk.underline(
-            data.extra
-          )}: ${data.message}`
-        )
+        logger.info({
+          context: 'message',
+          message: data.message,
+          type: data.type,
+          recipient: data.extra,
+          user: {
+            role: clients[conn.id].role,
+            username: clients[conn.id].un,
+            id: clients[conn.id].id,
+            ip: clients[conn.id].ip
+          }
+        })
       } else {
-        log(
-          'message',
-          `[${
-            data.type.charAt(0).toUpperCase()
-          }${data.type.substring(1)
-          }] ${
-            chalk.underline(clients[conn.id].un)
-          }: ${
-            data.message}`
-        )
+        logger.info({
+          context: 'message',
+          message: data.message,
+          type: data.type,
+          user: {
+            role: clients[conn.id].role,
+            username: clients[conn.id].un,
+            id: clients[conn.id].id,
+            ip: clients[conn.id].ip
+          }
+        })
       }
 
       handleSocket(clients[conn.id], message)
     } catch (err) {
-      return log('error', err)
+      return logger.error(err)
     }
 
     rateLimit[conn.id] -= 1
   })
 
   conn.on('close', () => {
-    log(
-      'socket',
-      `${chalk.underline(conn.id)}: disconnected (${clients[conn.id].ip})`
-    )
+    logger.info({
+      context: 'socket',
+      message: 'User disconnected',
+      user: {
+        role: clients[conn.id].role,
+        username: clients[conn.id].un,
+        id: clients[conn.id].id,
+        ip: clients[conn.id].ip
+      }
+    })
     utils.sendToAll(clients, {
       type: 'typing',
       typing: false,
@@ -238,6 +268,29 @@ function updateUser (id, name) {
         JSON.stringify({ type: 'server', info: 'success' })
       )
       uid++
+
+      logger.info({
+        context: 'socket',
+        message: 'User connected',
+        user: {
+          role: clients[id].role,
+          username: name,
+          id: clients[id].id,
+          ip: clients[id].ip
+        }
+      })
+    } else {
+      logger.info({
+        context: 'user',
+        message: 'User changed its username',
+        user: {
+          role: clients[id].role,
+          username: name,
+          oldUsername: clients[id].un,
+          id: clients[id].id,
+          ip: clients[id].ip
+        }
+      })
     }
 
     users[clients[id].id].un = name
@@ -333,11 +386,25 @@ function handleSocket (user, message) {
                           Date.now(),
                           time * 1000 * 60
                         ])
+
+                        logger.info({
+                          context: 'user',
+                          message: 'User banned',
+                          admin: data.user,
+                          minutes: time,
+                          user: {
+                            role: clients[client].role,
+                            username: clients[client].un,
+                            id: clients[client].id,
+                            ip: clients[client].ip
+                          }
+                        })
                       }
                     }
 
                     data.extra = data.message
                     data.message = `${data.user} banned ${data.message} from the server for ${time} minutes`
+
                     return utils.sendToAll(clients, data)
                   }
                   data.message = "You don't have permission to do that"
@@ -402,6 +469,23 @@ function handleSocket (user, message) {
                 ) {
                   data.extra = data.message
                   data.message = `${data.user} kicked ${data.message} from the server`
+
+                  for (const client in clients) {
+                    if (clients[client].un === data.message) {
+                      logger.info({
+                        context: 'user',
+                        message: 'User kicked',
+                        admin: data.user,
+                        minutes: time,
+                        user: {
+                          role: clients[client].role,
+                          username: clients[client].un,
+                          id: clients[client].id,
+                          ip: clients[client].ip
+                        }
+                      })
+                    }
+                  }
                 } else {
                   data.message = "You don't have permission to do that"
                   return utils.sendBack(clients, data, user)
@@ -432,7 +516,7 @@ function handleSocket (user, message) {
 
 /* Internal */
 function readLine () {
-  rl.on('line', (line) => { // eslint-disable-line no-undef
+  rl.on('line', (line) => {
     const data = {}
     if (line.indexOf('/role') === 0) {
       const string = `Console gave ${line.substring(
@@ -449,9 +533,12 @@ function readLine () {
       utils.sendToOne(clients, users, data, line.substring(6), data.type)
     }
 
-    rl.prompt() // eslint-disable-line no-undef
+    rl.prompt()
   }).on('close', () => {
-    log('stop', 'Shutting down\n')
+    logger.info({
+      context: 'server',
+      message: 'Server is shutting down'
+    })
     process.exit(0)
   })
 }
@@ -480,11 +567,11 @@ function onError (error) {
 
   switch (error.code) {
     case 'EACCES':
-      console.error(`${bind} requires elevated privileges`)
+      logger.error(`${bind} requires elevated privileges`)
       process.exit(1)
 
     case 'EADDRINUSE':
-      console.error(`${bind} is already in use`)
+      logger.error(`${bind} is already in use`)
       process.exit(1)
 
     default:
@@ -495,7 +582,10 @@ function onError (error) {
 function onListening () {
   const addr = server.address()
   const bind = typeof addr === 'string' ? `pipe ${addr}` : `port ${addr.port}`
-  log('start', `Listening at ${bind}`)
+  logger.info({
+    context: 'server',
+    message: `Server is listening at ${bind}`
+  })
 }
 
 chat.installHandlers(server, { prefix: '/socket', log () {} })
