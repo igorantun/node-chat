@@ -6,13 +6,13 @@
     "start": "node app.js"
   },
   "dependencies": {
-    "debug": "~2.1.1",
-    "ejs": "~2.3.1",
-    "express": "~4.12.2",
+    "debug": "2.1.1",
+    "ejs": "2.3.1",
+    "express": "4.12.2",
     "readline": "0.0.7",
-    "serve-favicon": "~2.2.0",
-    "sockjs": "~0.3.15",
-    "chalk": "~1.0.0",
-    "underscore.string": "~3.0.3"
+    "serve-favicon": "2.2.0",
+    "sockjs": "0.3.15",
+    "chalk": "1.0.0",
+    "underscore.string": "3.0.3"
   }
 }
