@@ -16,6 +16,7 @@ var connected = false
 var version = VERSION
 var blop = new Audio('sounds/blop.wav')
 var regex = /(&zwj;|&nbsp;)/g
+var signedOut = false
 
 var settings = {
   name: null,
@@ -60,7 +61,7 @@ var connect = function () {
     typing = false
     clients = []
 
-    if (connected) {
+    if (connected && signedOut === false) {
       updateBar('mdi-action-autorenew spin', 'Connection lost, reconnecting...', true)
 
       setTimeout(function () {
@@ -108,7 +109,7 @@ var connect = function () {
     }
 
     if (data.type === 'server') {
-      let userip
+      var userip
 
       switch (data.info) {
         case 'rejected':
@@ -558,6 +559,18 @@ $(document).ready(function () {
 
   $('#options').bind('click', function () {
     $('#options-dialog').modal('show')
+  })
+
+  $('#signout').bind('click', function () {
+    signedOut = true
+    socket.close()
+    connected = false
+    settings.name = undefined
+    username = undefined
+    updateBar('mdi-social-person', 'Choose an username', false)
+    document.getElementById('send').childNodes[0].nodeValue = 'Connect'
+    showChat('light', null, 'You have been signed out')
+    setTimeout(function () { signedOut = false }, 1000)
   })
 
   $('#menu-options').bind('click', function () {

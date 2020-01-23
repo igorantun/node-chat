@@ -8,13 +8,13 @@
   margin-left: 10px;
 }
 
-#icon-settings, #icon-audio {
+#icon-settings, #icon-audio, #icon-signout {
   color: white;
   top: -7px;
   left: -3.5px;
 }
 
-#audio {
+#audio, #options {
   margin-right: 10px;
 }
 
