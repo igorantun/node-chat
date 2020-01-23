@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
+  <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -20,215 +19,213 @@
     <link href="//cdn.jsdelivr.net/emojione/1.3.0/assets/css/emojione.min.css" rel="stylesheet" type="text/css"/>
     <link href="https://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic" rel="stylesheet" type="text/css">
     <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet" type="text/css">
-</head>
+  </head>
 
-<body>
+  <body>
     <div class="container-fluid main">
-        <a target="_blank" href="https://github.com/IgorAntun/node-chat"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a>
+      <a target="_blank" href="https://github.com/IgorAntun/node-chat"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a>
 
-        <div class="row">
-            <div class="col-xs-12 col-lg-10 col-lg-offset-1"><br>
-                <div class="well page active">
-                    <nav class="navbar shadow-z-2">
-                        <div class="container-fluid">
-                            <div class="navbar-header">
-                                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#collapser">
-                                    <span class="icon-bar"></span>
-                                    <span class="icon-bar"></span>
-                                    <span class="icon-bar"></span>
-                                </button>
-                                <a class="navbar-brand" href="#">Node.JS Chat <span id="version" style="font-size:7pt"></span></a>
-                            </div>
-
-                            <div class="collapse navbar-collapse" id="collapser">
-                                <ul class="nav navbar-nav">
-                                    <li class="active"><a href="#">Chat</a></li>
-                                    <li><a id="help" href="#">Help</a></li>
-                                    <li><a id="user" href="#">Users</a></li>
-                                    <li><a id="menu-admin" href="#" style="display:none">Admin</a></li>
-                                    <li><a id="menu-options" href="#">Options</a></li>
-                                </ul>
-                            </div>
-                        </div>
-                    </nav>
-
-                    <div class="row">
-                        <div class="col-xs-12 col-md-12 ">
-                            <div class="well">
-                                <div class="row">
-                                    <div class="col-xs-6">
-                                        <h2>Messenger</h2>
-                                    </div>
-                                    <div class="col-xs-6">
-                                        <button id="options" class="btn btn-fab btn-fab-mini btn-primary pull-right">
-                                            <i id="icon-settings" class="mdi mdi-action-settings"></i>
-                                        </button>
-                                        <button id="audio" class="btn btn-fab btn-fab-mini btn-primary pull-right" style="display:none">
-                                            <i id="icon-audio" class="mdi mdi-av-mic"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                                <br>
-
-                                <div class="panel panel-default">
-                                    <div class="panel-heading">Messages</div>
-                                    <div id="panel" class="panel-body"></div>
-                                </div>
-
-                                <p id="typing"><br></p>
-                                <hr>
-
-                                <div class="row">
-                                    <div class="col-lg-8 col-lg-offset-2">
-                                        <div class="input-group">
-                                            <span class="input-group-addon"><span id="icon" class="mdi mdi-social-person"></span></span>
-                                            <input id="message" type="text" class="form-control" placeholder="Choose an username" aria-describedby="basic-addon1" maxlength="768">
-                                            <span class="input-group-btn">
-                                                <button id="send" class="btn btn-primary btn-flat">Connect</button>
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-xs-12">
-                            <p class="text-left pull-left">Created by <a href="https://github.com/IgorAntun" target="_blank">Igor Antun</a></p>
-                            <p id="badges" class="text-right pull-right">
-                                <span><label id="users" class="label">0 USERS</label></span>
-                                <span><label id="admin" class="label label-warning" style="display:none">ADMIN</label></span>
-                                <span><label class="label label-info">BETA</label></span>
-                            </p>
-                        </div>
-                    </div>
+      <div class="row">
+        <div class="col-xs-12 col-lg-10 col-lg-offset-1"><br>
+          <div class="well page active">
+            <nav class="navbar shadow-z-2">
+              <div class="container-fluid">
+                <div class="navbar-header">
+                  <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#collapser">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                  </button>
+                  <a class="navbar-brand" href="#">Node.JS Chat <span id="version" style="font-size:7pt"></span></a>
                 </div>
+
+                <div class="collapse navbar-collapse" id="collapser">
+                  <ul class="nav navbar-nav">
+                    <li class="active"><a href="#">Chat</a></li>
+                    <li><a id="help" href="#">Help</a></li>
+                    <li><a id="user" href="#">Users</a></li>
+                    <li><a id="menu-admin" href="#" style="display:none">Admin</a></li>
+                    <li><a id="menu-options" href="#">Options</a></li>
+                  </ul>
+                </div>
+              </div>
+            </nav>
+
+            <div class="row">
+              <div class="col-xs-12 col-md-12 ">
+                <div class="well">
+                  <div class="row">
+                    <div class="col-xs-6">
+                      <h2>Messenger</h2>
+                    </div>
+                    <div class="col-xs-6">
+                      <button id="options" class="btn btn-fab btn-fab-mini btn-primary pull-right">
+                        <i id="icon-settings" class="mdi mdi-action-settings"></i>
+                      </button>
+                      <button id="audio" class="btn btn-fab btn-fab-mini btn-primary pull-right" style="display:none">
+                        <i id="icon-audio" class="mdi mdi-av-mic"></i>
+                      </button>
+                    </div>
+                  </div>
+                  <br>
+
+                  <div class="panel panel-default">
+                    <div class="panel-heading">Messages</div>
+                    <div id="panel" class="panel-body"></div>
+                  </div>
+
+                  <p id="typing"><br></p>
+                  <hr>
+
+                  <div class="row">
+                    <div class="col-lg-8 col-lg-offset-2">
+                      <div class="input-group">
+                        <span class="input-group-addon"><span id="icon" class="mdi mdi-social-person"></span></span>
+                        <input id="message" type="text" class="form-control" placeholder="Choose an username" aria-describedby="basic-addon1" maxlength="768">
+                        <span class="input-group-btn">
+                          <button id="send" class="btn btn-primary btn-flat">Connect</button>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
+            <div class="row">
+              <div class="col-xs-12">
+                <p class="text-left pull-left">Created by <a href="https://github.com/IgorAntun" target="_blank">Igor Antun</a></p>
+                <p id="badges" class="text-right pull-right">
+                  <span><label id="users" class="label">0 USERS</label></span>
+                  <span><label id="admin" class="label label-warning" style="display:none">ADMIN</label></span>
+                  <span><label class="label label-info">BETA</label></span>
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
+      </div>
     </div>
 
     <div id="help-dialog" class="modal fade" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-body">
-                    <div class="row">
-                        <h4><b>Current available commands:</b></h4>
-                        <div class="col-xs-3"><b>
-                            <b>COMMAND</b>
-                            <br>/pm
-                            <br>/me or /em
-                            <br>/shrug
-                            <br>/name
-                            <br>/users
-                            <br>/help
-                            <br>/clear
-                            <br>/reconnect
-                        </b></div>
-                        <div class="col-xs-2">
-                            <b>VARIABLES</b>
-                            <br>[user] [message]
-                            <br>[message]
-                            <br>[message]
-                            <br>[name]
-                            <br>
-                            <br>
-                            <br>
-                        </div>
-                        <div class="col-xs-7">
-                            <b>DESCRIPTION</b>
-                            <br>Sends a private <i>[message]</i> for <i>[user]</i>
-                            <br>Sends <i>[message]</i> in italics
-                            <br>Sends <i>[message]</i> followed by '¯\_(ツ)_/¯'
-                            <br>Changes your name to <i>[name]</i>
-                            <br>Shows users on the server
-                            <br>Shows this help dialog
-                            <br>Clears your chat history
-                            <br>Reconnects to the server
-                        </div>
-                    </div>
-                </div>
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-body">
+            <div class="row">
+              <h4><b>Current available commands:</b></h4>
+              <div class="col-xs-3"><b>
+                <b>COMMAND</b>
+                <br>/pm
+                <br>/me or /em
+                <br>/shrug
+                <br>/name
+                <br>/users
+                <br>/help
+                <br>/clear
+                <br>/reconnect
+              </b></div>
+              <div class="col-xs-2">
+                <b>VARIABLES</b>
+                <br>[user] [message]
+                <br>[message]
+                <br>[message]
+                <br>[name]
+                <br>
+                <br>
+                <br>
+              </div>
+              <div class="col-xs-7">
+                <b>DESCRIPTION</b>
+                <br>Sends a private <i>[message]</i> for <i>[user]</i>
+                <br>Sends <i>[message]</i> in italics
+                <br>Sends <i>[message]</i> followed by '¯\_(ツ)_/¯'
+                <br>Changes your name to <i>[name]</i>
+                <br>Shows users on the server
+                <br>Shows this help dialog
+                <br>Clears your chat history
+                <br>Reconnects to the server
+              </div>
             </div>
+          </div>
         </div>
+      </div>
     </div>
 
     <div id="admin-help-dialog" class="modal fade" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-body">
-                    <div class="row">
-                        <h4><b>Current available administrator commands:</b></h4>
-                        <div class="col-xs-3"><b>
-                            <b>COMMAND</b>
-                            <br>/alert
-                            <br>/kick
-                            <br>/ban
-                            <br>/role
-                        </b></div>
-                        <div class="col-xs-2">
-                            <b>VARIABLES</b>
-                            <br>[message]
-                            <br>[user]
-                            <br>[user] [minutes]
-                            <br>[user] [1-3]
-                        </div>
-                        <div class="col-xs-7">
-                            <b>DESCRIPTION</b>
-                            <br>Sends global <i>[message]</i>
-                            <br>Kicks <i>[user]</i> from the server
-                            <br>Bans <i>[user]</i> from the server for <i>[minutes]</i>
-                            <br>Changes <i>[user]</i> administrator permissions
-                        </div>
-                    </div>
-                </div>
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-body">
+            <div class="row">
+              <h4><b>Current available administrator commands:</b></h4>
+              <div class="col-xs-3"><b>
+                <b>COMMAND</b>
+                <br>/alert
+                <br>/kick
+                <br>/ban
+                <br>/role
+              </b></div>
+              <div class="col-xs-2">
+                <b>VARIABLES</b>
+                <br>[message]
+                <br>[user]
+                <br>[user] [minutes]
+                <br>[user] [1-3]
+              </div>
+              <div class="col-xs-7">
+                <b>DESCRIPTION</b>
+                <br>Sends global <i>[message]</i>
+                <br>Kicks <i>[user]</i> from the server
+                <br>Bans <i>[user]</i> from the server for <i>[minutes]</i>
+                <br>Changes <i>[user]</i> administrator permissions
+              </div>
             </div>
+          </div>
         </div>
+      </div>
     </div>
 
     <div id="options-dialog" class="modal fade" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-body">
-                    <h4><b>Chat options:</b></h4>
-                    <div class="togglebutton">
-                        <label>Emojis<input id="emoji" type="checkbox"></label>
-                    </div>
-                    <div class="togglebutton">
-                        <label>Greentext<input id="greentext" type="checkbox"></label>
-                    </div>
-                    <div class="togglebutton" id="toggle-inline">
-                        <label>Inline Images<input id="inline" type="checkbox"></label>
-                    </div>
-                    <div class="togglebutton">
-                        <label>Mention Sound<input id="sound" type="checkbox"></label>
-                    </div>
-                    <div class="togglebutton" id="toggle-desktop" style="display:none">
-                        <label>Desktop Notifications<input id="desktop" type="checkbox"></label>
-                    </div>
-                    <div class="togglebutton" id="toggle-synthesis" style="display:none">
-                        <label>Speech Synthesis [Experimental]<input id="synthesis" type="checkbox"></label>
-                    </div>
-                    <div class="togglebutton" id="toggle-recognition" style="display:none">
-                        <label>Speech Recognition [Experimental]<input id="recognition" type="checkbox"></label>
-                    </div>
-                </div>
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-body">
+            <h4><b>Chat options:</b></h4>
+            <div class="togglebutton">
+              <label>Emojis<input id="emoji" type="checkbox"></label>
             </div>
+            <div class="togglebutton">
+              <label>Greentext<input id="greentext" type="checkbox"></label>
+            </div>
+            <div class="togglebutton" id="toggle-inline">
+              <label>Inline Images<input id="inline" type="checkbox"></label>
+            </div>
+            <div class="togglebutton">
+              <label>Mention Sound<input id="sound" type="checkbox"></label>
+            </div>
+            <div class="togglebutton" id="toggle-desktop" style="display:none">
+              <label>Desktop Notifications<input id="desktop" type="checkbox"></label>
+            </div>
+            <div class="togglebutton" id="toggle-synthesis" style="display:none">
+              <label>Speech Synthesis [Experimental]<input id="synthesis" type="checkbox"></label>
+            </div>
+            <div class="togglebutton" id="toggle-recognition" style="display:none">
+              <label>Speech Recognition [Experimental]<input id="recognition" type="checkbox"></label>
+            </div>
+          </div>
         </div>
+      </div>
     </div>
-
-    
 
     <div id="users-dialog" class="modal fade" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-body">
-                    <h4><b>Current users:</b></h4>
-                    <div id="users-content"></div>
-                </div>
-            </div>
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-body">
+            <h4><b>Current users:</b></h4>
+            <div id="users-content"></div>
+          </div>
         </div>
+      </div>
     </div>
     <script>
-        var VERSION="<%= version%>";
+      var VERSION="<%= version%>";
     </script>
 
     <script src="//lorenzoongithub.github.io/completely/complete.ly.1.0.1.min.js"></script>
@@ -243,9 +240,9 @@
     <script src="js/chat.js"></script>
 
     <script>
-        $(document).ready(function() {
-            $.material.init();
-        });
+      $(document).ready(function() {
+        $.material.init();
+      });
     </script>
-</body>
+  </body>
 </html>
