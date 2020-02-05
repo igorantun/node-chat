@@ -59,10 +59,12 @@ chat.on('connection', (conn) => {
   lastTime[conn.id] = Date.now()
   currentTime[conn.id] = Date.now()
 
+  const ip = conn.url.split('?ip=')[1]
+
   clients[conn.id] = {
     id: uid,
     un: null,
-    ip: conn.headers['x-forwarded-for'],
+    ip: ip,
     role: 0,
     con: conn,
     warn: 0

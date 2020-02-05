@@ -17,6 +17,7 @@ var version = VERSION
 var blop = new Audio('sounds/blop.wav')
 var regex = /(&zwj;|&nbsp;)/g
 var signedOut = false
+var ip
 
 var settings = {
   name: null,
@@ -45,7 +46,7 @@ var connect = function () {
     protocol = 'ws://'
   }
 
-  socket = new WebSocket(protocol + window.location.host + '/socket/websocket')
+  socket = new WebSocket(protocol + window.location.host + '/socket/websocket?ip=' + ip)
 
   socket.onopen = function () {
     setInterval(function () {
@@ -749,6 +750,10 @@ if (typeof (Storage) !== 'undefined') {
     }
   }
 }
+
+$.getJSON('https://ipapi.co/json/', (data) => {
+  ip = data.ip
+})
 
 window.onfocus = function () {
   document.title = 'Node.JS Chat'
